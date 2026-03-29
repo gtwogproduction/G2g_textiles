@@ -1,0 +1,264 @@
+/* ===== CONTACT PAGE LAYOUT ===== */
+.contact-page { overflow-x: hidden; }
+
+.contact-main {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  min-height: 100vh;
+  padding-top: 64px;
+}
+
+/* ===== SIDEBAR ===== */
+.contact-sidebar { 
+  background: var(--bg-alt); 
+  border-right: 1px solid var(--border); 
+}
+
+.contact-sidebar__inner {
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.sidebar__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--navy-light);
+  font-weight: 500;
+}
+.sidebar__title {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 0.95;
+  letter-spacing: 0.03em;
+}
+.sidebar__title em { font-style: normal; color: var(--navy-light); }
+.sidebar__sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+.sidebar__wizard-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.sidebar__details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.sidebar__detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+.sidebar__detail-icon { font-size: 1rem; margin-top: 1px; flex-shrink: 0; }
+.sidebar__detail-item strong {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+}
+.sidebar__detail-item p {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ===== FORM PANEL ===== */
+.contact-panel { 
+  background: var(--bg); 
+}
+.contact-panel__inner {
+  max-width: 640px;
+  padding: 3rem 3.5rem;
+  margin: 0 auto;
+}
+.panel__title {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.panel__sub {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-bottom: 2.5rem;
+}
+
+/* ===== NAV BACK ===== */
+.nav__back {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.nav__back:hover { color: var(--white); }
+
+/* ===== ALERT ===== */
+.alert {
+  padding: 0.9rem 1.25rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  font-size: 0.88rem;
+  border-left: 3px solid var(--navy-light);
+  background: rgba(27, 58, 107, 0.15);
+  color: var(--white);
+}
+
+/* ===== FORM STRUCTURE ===== */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.form-group label {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+.req { color: var(--navy-light); }
+.optional { color: var(--muted); font-size: 0.85em; font-weight: 300; text-transform: none; letter-spacing: 0; }
+.form-error { color: #e05c5c; font-size: 0.78rem; }
+
+/* ===== TEXT INPUTS ===== */
+.contact-form input[type="text"],
+.contact-form input[type="email"],
+.contact-form input[type="tel"],
+.contact-form textarea,
+.contact-form select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 300;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+}
+.contact-form input:focus,
+.contact-form textarea:focus,
+.contact-form select:focus {
+  border-color: var(--navy-light);
+  background: #1e1e22;
+}
+.contact-form input::placeholder,
+.contact-form textarea::placeholder { color: var(--muted); opacity: 1; }
+.contact-form textarea { resize: vertical; min-height: 90px; }
+.contact-form select { cursor: pointer; }
+.contact-form select option { background: #1a1a1d; color: var(--white); }
+
+/* ===== RADIO PILLS =====
+   Django renders RadioSelect as <ul><li><label><input>text</label></li></ul>
+   We hide the native input and style the label as a pill.
+   ===== */
+.radio-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+/* Strip Django's ul/li completely */
+.radio-pills ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  width: 100%;
+}
+.radio-pills ul li {
+  display: block;
+}
+
+/* The pill label */
+.radio-pills ul li label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.4rem 0.85rem;
+  border-radius: 100px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  /* Override the uppercase label style from .form-group label */
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+.radio-pills ul li label:hover {
+  border-color: rgba(42, 82, 160, 0.6);
+  color: var(--white);
+}
+
+/* Hide the native radio button — it sits inside the label */
+.radio-pills ul li label input[type="radio"] {
+  display: none;
+}
+
+/* Selected state — Django doesn't add a class, we use :has() */
+.radio-pills ul li label:has(input[type="radio"]:checked) {
+  border-color: var(--navy-light);
+  background: rgba(42, 82, 160, 0.18);
+  color: var(--white);
+}
+
+/* ===== SUBMIT BUTTON ===== */
+.contact-form .btn--full {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 860px) {
+  .contact-main {
+    grid-template-columns: 1fr;
+  }
+  .contact-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-sidebar__inner {
+    padding: 2rem 1.5rem;
+  }
+  .contact-panel__inner {
+    padding: 2rem 1.5rem;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

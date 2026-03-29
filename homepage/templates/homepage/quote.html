@@ -1,0 +1,279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get a Quote — G2G Textiles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'homepage/css/style.css' %}" />
+  <link rel="stylesheet" href="{% static 'homepage/css/quote.css' %}" />
+</head>
+<body class="quote-page">
+
+  <nav class="nav">
+    <a href="{% url 'homepage' %}" class="nav__logo">G2G <span>Textiles</span></a>
+    <a href="{% url 'homepage' %}" class="nav__back">← Back to Home</a>
+  </nav>
+
+  <main class="quote-main">
+
+    <!-- Sidebar -->
+    <aside class="quote-sidebar">
+      <div class="quote-sidebar__inner">
+        <p class="sidebar__eyebrow">Quote Request</p>
+        <h1 class="sidebar__title">Let's build<br/><em>your order.</em></h1>
+        <p class="sidebar__sub">Takes around 5 minutes. We'll use your answers to prepare a tailored quote within 48 hours.</p>
+
+        <nav class="step-nav">
+          {% for s in steps_meta %}
+          <div class="step-nav__item {% if s.active %}active{% elif s.done %}done{% endif %}">
+            <div class="step-nav__dot">
+              {% if s.done %}<span class="checkmark">✓</span>{% else %}<span>{{ s.number }}</span>{% endif %}
+            </div>
+            <span class="step-nav__label">{{ s.title }}</span>
+          </div>
+          {% endfor %}
+        </nav>
+
+        <div class="sidebar__footer">
+          <p>Questions? Call us or email<br/><a href="mailto:hello@g2gtextiles.com">hello@g2gtextiles.com</a></p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Form panel -->
+    <section class="quote-panel">
+      <div class="quote-panel__inner">
+
+        <!-- Progress bar -->
+        <div class="progress-bar">
+          <div class="progress-bar__fill" style="width: {{ progress }}%"></div>
+        </div>
+        <p class="progress-label">Step {{ step }} of {{ total_steps }}</p>
+
+        <h2 class="panel__title">{{ step_title }}</h2>
+
+        {% if messages %}
+          {% for message in messages %}
+          <div class="alert">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="quote-form" id="quoteForm">
+          {% csrf_token %}
+
+          {% if step_slug == 'about' %}
+            <div class="form-grid">
+              <div class="form-group form-group--full">
+                <label>Are you ordering as a <span class="req">*</span></label>
+                <div class="radio-cards">{{ form.client_type }}</div>
+              </div>
+              <div class="form-group form-group--full" id="companyField">
+                <label>Company / Organisation <span class="req">*</span></label>
+                {{ form.company_name }}
+                {% if form.company_name.errors %}<span class="form-error">{{ form.company_name.errors.0 }}</span>{% endif %}
+              </div>
+              <div class="form-group form-group--full" id="industryField">
+                <label>Industry <span class="req">*</span></label>
+                {{ form.industry }}
+                {% if form.industry.errors %}<span class="form-error">{{ form.industry.errors.0 }}</span>{% endif %}
+              </div>
+              <div class="form-group form-group--full" id="industryOtherWrap" style="display:none">
+                <label>Please specify your industry</label>
+                {{ form.industry_other }}
+              </div>
+              <div class="form-group">
+                <label>Your Name <span class="req">*</span></label>
+                {{ form.contact_name }}
+                {% if form.contact_name.errors %}<span class="form-error">{{ form.contact_name.errors.0 }}</span>{% endif %}
+              </div>
+              <div class="form-group">
+                <label>Your Role <span class="optional">(optional)</span></label>
+                {{ form.role }}
+              </div>
+              <div class="form-group">
+                <label>Email Address <span class="req">*</span></label>
+                {{ form.email }}
+                {% if form.email.errors %}<span class="form-error">{{ form.email.errors.0 }}</span>{% endif %}
+              </div>
+              <div class="form-group">
+                <label>Phone <span class="optional">(optional)</span></label>
+                {{ form.phone }}
+              </div>
+              <div class="form-group form-group--full">
+                <label>Website <span class="optional">(optional)</span></label>
+                {{ form.website }}
+              </div>
+            </div>
+
+          {% elif step_slug == 'order' %}
+            <div class="form-grid">
+              <div class="form-group form-group--full">
+                <label>What products do you need? <span class="req">*</span></label>
+                <div class="checkbox-grid">{{ form.product_types }}</div>
+                {% if form.product_types.errors %}<span class="form-error">{{ form.product_types.errors.0 }}</span>{% endif %}
+              </div>
+              <div class="form-group form-group--full" id="productOtherWrap" style="display:none">
+                <label>Describe the other product</label>
+                {{ form.product_other }}
+              </div>
+              <div class="form-group">
+                <label>Number of different styles / designs <span class="req">*</span></label>
+                {{ form.num_styles }}
+                <p class="field-hint">e.g. 2 if you need a home kit and an away kit</p>
+              </div>
+              <div class="form-group">
+                <label>Quantity per style <span class="req">*</span></label>
+                {{ form.quantity_per_style }}
+              </div>
+            </div>
+
+          {% elif step_slug == 'custom' %}
+            <div class="form-grid">
+              <div class="form-group form-group--full">
+                <label>Brand / Garment Colours <span class="optional">(optional)</span></label>
+                {{ form.brand_colours }}
+                <p class="field-hint">Hex codes preferred, e.g. #1B3A6B (Navy), #FFFFFF (White)</p>
+              </div>
+              <div class="form-group form-group--full">
+                <label>Preferred print / decoration method <span class="req">*</span></label>
+                <div class="radio-list">{{ form.print_method }}</div>
+              </div>
+              <div class="form-group form-group--full">
+                <label>Number of print / decoration positions <span class="req">*</span></label>
+                <div class="radio-cards">{{ form.print_positions }}</div>
+              </div>
+              <div class="form-group form-group--full">
+                <label>Design file status <span class="req">*</span></label>
+                <div class="radio-list">{{ form.design_files_status }}</div>
+              </div>
+              <div class="form-group form-group--full checkbox-single">
+                {{ form.has_logo }} <label for="{{ form.has_logo.id_for_label }}">We have an existing logo</label>
+              </div>
+              <div class="form-group form-group--full checkbox-single">
+                {{ form.pantone_matching }} <label for="{{ form.pantone_matching.id_for_label }}">Pantone / exact colour matching required</label>
+              </div>
+              <div class="form-group form-group--full">
+                <label>Additional customisation notes <span class="optional">(optional)</span></label>
+                {{ form.customisation_notes }}
+                <p class="field-hint">Special labels, packaging, finishing details, etc.</p>
+              </div>
+            </div>
+
+          {% elif step_slug == 'timeline' %}
+            <div class="form-grid">
+              <div class="form-group form-group--full">
+                <label>When do you need delivery? <span class="req">*</span></label>
+                <div class="radio-list">{{ form.desired_delivery }}</div>
+              </div>
+              <div class="form-group">
+                <label>Hard deadline <span class="optional">(if applicable)</span></label>
+                {{ form.hard_deadline }}
+              </div>
+              <div class="form-group form-group--full">
+                <label>Do you require a sample first? <span class="req">*</span></label>
+                <div class="radio-list">{{ form.sample_required }}</div>
+              </div>
+              <div class="form-group">
+                <label>Delivery country <span class="req">*</span></label>
+                {{ form.delivery_country }}
+              </div>
+              <div class="form-group">
+                <label>Delivery city <span class="optional">(optional)</span></label>
+                {{ form.delivery_city }}
+              </div>
+              <div class="form-group form-group--full checkbox-single">
+                {{ form.split_delivery }} <label for="{{ form.split_delivery.id_for_label }}">Delivery to multiple locations required</label>
+              </div>
+            </div>
+
+          {% elif step_slug == 'budget' %}
+            <div class="form-grid">
+              <div class="form-group form-group--full">
+                <label>Approximate budget range <span class="req">*</span></label>
+                <p class="field-hint">This helps us tailor the right fabrics and production route for you.</p>
+                <div class="radio-cards radio-cards--budget">{{ form.budget_range }}</div>
+              </div>
+              <div class="form-group form-group--full">
+                <label>Budget notes <span class="optional">(optional)</span></label>
+                {{ form.budget_notes }}
+              </div>
+            </div>
+
+          {% elif step_slug == 'country' %}
+            <div class="form-grid">
+              <div class="form-group form-group--full">
+                <p class="field-hint" style="font-size:0.92rem; color: var(--muted); line-height:1.7; margin-bottom: 1rem;">
+                  We work with trusted manufacturers in three main regions. Select your preference and we'll recommend the best fit based on your brief, budget and timeline.
+                </p>
+                <div class="country-cards">
+                  <div class="country-card">
+                    <div class="country-card__header">
+                      <label class="country-card__label">
+                        <input type="checkbox" name="production_countries" value="china" /> China
+                      </label>
+                      <span class="country-tag country-tag--fast">Fastest · Most affordable</span>
+                    </div>
+                    <p class="country-card__desc">Best for large volumes and competitive pricing. Shorter lead times and a wide range of fabrics and techniques. Less hands-on oversight — we manage quality control on your behalf.</p>
+                  </div>
+                  <div class="country-card">
+                    <div class="country-card__header">
+                      <label class="country-card__label">
+                        <input type="checkbox" name="production_countries" value="portugal" /> Portugal
+                      </label>
+                      <span class="country-tag country-tag--mid">Mid-range · Sustainable</span>
+                    </div>
+                    <p class="country-card__desc">European manufacturing with strong quality standards and fair working conditions. Slightly higher cost and longer lead times than China, but more transparency and better sustainability credentials.</p>
+                  </div>
+                  <div class="country-card">
+                    <div class="country-card__header">
+                      <label class="country-card__label">
+                        <input type="checkbox" name="production_countries" value="italy" /> Italy
+                      </label>
+                      <span class="country-tag country-tag--premium">Premium · Maximum control</span>
+                    </div>
+                    <p class="country-card__desc">The highest level of craftsmanship and quality control. Ideal for premium retail brands or small runs where quality is non-negotiable. Higher price point and longer lead times.</p>
+                  </div>
+                  <div class="country-card">
+                    <div class="country-card__header">
+                      <label class="country-card__label">
+                        <input type="checkbox" name="production_countries" value="no_preference" /> No preference
+                      </label>
+                      <span class="country-tag">Advise me</span>
+                    </div>
+                    <p class="country-card__desc">Not sure? That's fine — tell us your priorities and we'll recommend the best production route for your specific order.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group form-group--full">
+                <label>Additional notes on production location <span class="optional">(optional)</span></label>
+                {{ form.production_notes }}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="form-actions">
+            {% if step > 1 %}
+            <a href="{% url 'quote_step' step=step|add:'-1' %}" class="btn btn--ghost">← Back</a>
+            {% else %}
+            <span></span>
+            {% endif %}
+
+            {% if step < total_steps %}
+            <button type="submit" class="btn btn--primary">Continue →</button>
+            {% else %}
+            <button type="submit" class="btn btn--primary btn--submit">Submit Quote Request →</button>
+            {% endif %}
+          </div>
+        </form>
+
+      </div>
+    </section>
+  </main>
+
+  <script src="{% static 'homepage/js/quote.js' %}"></script>
+</body>
+</html>

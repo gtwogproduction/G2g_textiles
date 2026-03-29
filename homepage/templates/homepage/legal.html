@@ -1,0 +1,72 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ legal.title }} — G2G Textiles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'homepage/css/style.css' %}" />
+  <style>
+    .legal-page { padding-top: 64px; }
+    .legal-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 4rem 2rem 6rem;
+    }
+    .legal-wrap h1 {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.5rem;
+      color: var(--white);
+    }
+    .legal-wrap .last-updated {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .legal-content {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--white);
+    }
+    .legal-content p { margin-bottom: 1.25rem; }
+    .legal-content h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: 0.04em;
+      margin: 2.5rem 0 0.75rem;
+      color: var(--white);
+    }
+    .legal-content h3 {
+      font-size: 1rem;
+      font-weight: 500;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .legal-content a { color: var(--navy-light); text-decoration: underline; }
+  </style>
+</head>
+<body class="legal-page">
+
+  <nav class="nav">
+    <a href="{% url 'homepage' %}" class="nav__logo">G2G <span>Textiles</span></a>
+    <a href="{% url 'homepage' %}" class="nav__back" style="font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);">← Back to Home</a>
+  </nav>
+
+  <div class="legal-wrap">
+    <h1>{{ legal.title }}</h1>
+    <p class="last-updated">Last updated: {{ legal.last_updated|date:"d F Y" }}</p>
+    <div class="legal-content">
+      {{ legal.content|linebreaks }}
+    </div>
+  </div>
+
+</body>
+</html>

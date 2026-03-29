@@ -1,0 +1,187 @@
+[
+  {
+    "model": "homepage.sitesettings",
+    "pk": 1,
+    "fields": {
+      "hero_eyebrow": "B2B Textile Solutions",
+      "hero_headline_line1": "Clothing",
+      "hero_headline_line2": "Built for",
+      "hero_headline_line3": "Business.",
+      "hero_subtext": "From sports kits to retail lines — G2G Textiles delivers premium custom clothing at scale. No compromises, no middlemen.",
+      "hero_cta_primary": "Get a Quote",
+      "hero_cta_secondary": "See How It Works",
+      "hero_badge_year": "2015",
+      "hero_badge_text": "Trusted by 300+ brands",
+      "cta_label": "Ready to order?",
+      "cta_headline_line1": "Let's build",
+      "cta_headline_line2": "your order.",
+      "cta_subtext": "Get in touch directly or use the full quote wizard — it takes 5 minutes and gives us everything we need to send you a precise quote.",
+      "cta_btn_primary": "Start Quote Wizard",
+      "cta_btn_secondary": "Quick Contact",
+      "footer_instagram_url": "https://instagram.com/g2gtextiles",
+      "footer_instagram_handle": "@g2gtextiles",
+      "footer_copyright": "© 2025 G2G Textiles."
+    }
+  },
+  {
+    "model": "homepage.service",
+    "pk": 1,
+    "fields": {
+      "title": "Corporate & Office Wear",
+      "title_de": "Unternehmens- & Bürobekleidung",
+      "description": "Premium workwear tailored for professional environments. Branded, consistent, and built to last.",
+      "description_de": "Hochwertige Berufsbekleidung für professionelle Auftritte — mit Ihrem Branding, einheitlichem Look und langer Haltbarkeit.",
+      "image": null,
+      "order": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.service",
+    "pk": 2,
+    "fields": {
+      "title": "Sports & Club Kits",
+      "title_de": "Vereins- & Sportbekleidung",
+      "description": "Custom kits for sports clubs of every level — from local teams to regional leagues.",
+      "description_de": "Individuelle Ausrüstung für Sportvereine jeder Größe — vom lokalen Hobbyclub bis zur Regionalliga.",
+      "image": null,
+      "order": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.service",
+    "pk": 3,
+    "fields": {
+      "title": "Retail & Fashion Brands",
+      "title_de": "Retail- & Modemarken",
+      "description": "Private label manufacturing and white-label solutions for fashion retailers and brands.",
+      "description_de": "Eigenmarkenproduktion und White-Label-Lösungen für Modehändler, die auf Qualität setzen.",
+      "image": null,
+      "order": 3,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.service",
+    "pk": 4,
+    "fields": {
+      "title": "Bulk & Custom Orders",
+      "title_de": "Großbestellungen & Sonderanfertigungen",
+      "description": "Flexible MOQs, fast turnaround, and full customisation for any industry or occasion.",
+      "description_de": "Flexible Mindestmengen, kurze Lieferzeiten und vollständige Individualisierung — für jede Branche und jeden Anlass.",
+      "image": null,
+      "order": 4,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.howitworksstep",
+    "pk": 1,
+    "fields": {
+      "number": "01",
+      "title": "Get in Touch",
+      "title_de": "Anfrage stellen",
+      "description": "Tell us about your needs — quantities, styles, timeline, and branding requirements.",
+      "description_de": "Teilen Sie uns Ihre Vorstellungen mit — Mengen, Styles, Zeitplan und Branding-Anforderungen.",
+      "order": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.howitworksstep",
+    "pk": 2,
+    "fields": {
+      "number": "02",
+      "title": "Receive a Quote",
+      "title_de": "Angebot erhalten",
+      "description": "We provide a detailed, transparent quote within 48 hours. No hidden fees.",
+      "description_de": "Sie erhalten innerhalb von 48 Stunden ein detailliertes, transparentes Angebot — ohne versteckte Kosten.",
+      "order": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.howitworksstep",
+    "pk": 3,
+    "fields": {
+      "number": "03",
+      "title": "Approve Samples",
+      "title_de": "Muster freigeben",
+      "description": "We send physical samples for your approval before full production begins.",
+      "description_de": "Vor der Produktion erhalten Sie physische Muster zur Freigabe — damit das Ergebnis genau Ihren Vorstellungen entspricht.",
+      "order": 3,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.howitworksstep",
+    "pk": 4,
+    "fields": {
+      "number": "04",
+      "title": "Production & Delivery",
+      "title_de": "Produktion & Lieferung",
+      "description": "Your order is produced to spec and delivered on time, every time.",
+      "description_de": "Ihre Bestellung wird präzise nach Vorgabe produziert und pünktlich geliefert — jedes Mal.",
+      "order": 4,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.pricingtier",
+    "pk": 1,
+    "fields": {
+      "name": "Starter",
+      "name_de": "Starter",
+      "units": "50–200 units",
+      "units_de": "50–200 Stück",
+      "description": "Perfect for small clubs, startups, or pilot orders.",
+      "description_de": "Ideal für kleine Vereine, Startups oder erste Testbestellungen.",
+      "features": "Custom branding\nStandard fabrics\n4–6 week lead time\nEmail support",
+      "features_de": "Individuelles Branding\nStandardstoffe\n4–6 Wochen Lieferzeit\nSupport per E-Mail",
+      "cta_label": "Get a Quote",
+      "cta_label_de": "Angebot anfragen",
+      "is_highlighted": false,
+      "order": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.pricingtier",
+    "pk": 2,
+    "fields": {
+      "name": "Business",
+      "name_de": "Business",
+      "units": "200–1,000 units",
+      "units_de": "200–1.000 Stück",
+      "description": "Our most popular tier for growing brands and organisations.",
+      "description_de": "Unsere meistgewählte Option — ideal für wachsende Marken und Organisationen.",
+      "features": "Full customisation\nPremium fabric selection\n3–4 week lead time\nDedicated account manager\nSample approval",
+      "features_de": "Vollständige Individualisierung\nAuswahl aus Premium-Stoffen\n3–4 Wochen Lieferzeit\nPersönlicher Ansprechpartner\nMusterfreigabe",
+      "cta_label": "Get a Quote",
+      "cta_label_de": "Angebot anfragen",
+      "is_highlighted": true,
+      "order": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "homepage.pricingtier",
+    "pk": 3,
+    "fields": {
+      "name": "Enterprise",
+      "name_de": "Enterprise",
+      "units": "1,000+ units",
+      "units_de": "Ab 1.000 Stück",
+      "description": "Scalable production for large retailers, chains, and franchises.",
+      "description_de": "Skalierbare Produktion für große Händler, Filialketten und Franchisesysteme.",
+      "features": "Bespoke design service\nPriority production slots\n2–3 week lead time\nDedicated team\nWarehouse & logistics support",
+      "features_de": "Individueller Designservice\nBevorzugte Produktionsslots\n2–3 Wochen Lieferzeit\nFestes Betreuungsteam\nLagerung & Logistikunterstützung",
+      "cta_label": "Contact Us",
+      "cta_label_de": "Kontakt aufnehmen",
+      "is_highlighted": false,
+      "order": 3,
+      "is_active": true
+    }
+  }
+]

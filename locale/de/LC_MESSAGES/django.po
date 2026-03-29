@@ -1,0 +1,149 @@
+# German translations for G2G Textiles
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
+msgid "Impressum"
+msgstr "Impressum"
+
+msgid "AGB"
+msgstr "AGB"
+
+msgid "Trusted by"
+msgstr "Unsere Kunden"
+
+msgid "Production Country"
+msgstr "Produktionsland"
+
+msgid "About You"
+msgstr "Über Sie"
+
+msgid "The Order"
+msgstr "Die Bestellung"
+
+msgid "Customisation"
+msgstr "Individualisierung"
+
+msgid "Special Requirements"
+msgstr "Besondere Anforderungen"
+
+msgid "Are you ordering as a"
+msgstr "Sie bestellen als"
+
+msgid "Business / Organisation"
+msgstr "Unternehmen / Organisation"
+
+msgid "Private Individual"
+msgstr "Privatperson"
+
+msgid "Company / Organisation"
+msgstr "Unternehmen / Organisation"
+
+msgid "Industry"
+msgstr "Branche"
+
+msgid "Your Name"
+msgstr "Ihr Name"
+
+msgid "Your Role"
+msgstr "Ihre Funktion"
+
+msgid "Email Address"
+msgstr "E-Mail-Adresse"
+
+msgid "Phone"
+msgstr "Telefon"
+
+msgid "Website"
+msgstr "Webseite"
+
+msgid "What products do you need?"
+msgstr "Welche Produkte benötigen Sie?"
+
+msgid "Number of different styles / designs"
+msgstr "Anzahl verschiedener Styles / Designs"
+
+msgid "Quantity per style"
+msgstr "Menge pro Style"
+
+msgid "Brand / Garment Colours"
+msgstr "Marken- / Bekleidungsfarben"
+
+msgid "Preferred print / decoration method"
+msgstr "Bevorzugte Druck- / Veredelungsmethode"
+
+msgid "Number of print / decoration positions"
+msgstr "Anzahl Druck- / Veredelungspositionen"
+
+msgid "Design file status"
+msgstr "Status der Designdateien"
+
+msgid "Additional customisation notes"
+msgstr "Weitere Individualisierungshinweise"
+
+msgid "Production country preference"
+msgstr "Präferenz Produktionsland"
+
+msgid "Additional notes on production location"
+msgstr "Weitere Hinweise zum Produktionsstandort"
+
+msgid "Sustainability requirements"
+msgstr "Nachhaltigkeitsanforderungen"
+
+msgid "Certifications needed"
+msgstr "Benötigte Zertifizierungen"
+
+msgid "How did you hear about G2G?"
+msgstr "Wie haben Sie G2G kennengelernt?"
+
+msgid "Anything else we should know?"
+msgstr "Gibt es noch etwas, das wir wissen sollten?"
+
+msgid "We currently work with another supplier"
+msgstr "Wir arbeiten derzeit mit einem anderen Lieferanten"
+
+msgid "What are you looking to improve?"
+msgstr "Was möchten Sie verbessern?"
+
+msgid "We have an existing logo"
+msgstr "Wir haben ein bestehendes Logo"
+
+msgid "Pantone / exact colour matching required"
+msgstr "Pantone / exakte Farbabstimmung erforderlich"
+
+msgid "Delivery to multiple locations required"
+msgstr "Lieferung an mehrere Standorte erforderlich"
+
+msgid "Step"
+msgstr "Schritt"
+
+msgid "of"
+msgstr "von"
+
+msgid "Continue"
+msgstr "Weiter"
+
+msgid "Back"
+msgstr "Zurück"
+
+msgid "Submit Quote Request"
+msgstr "Anfrage absenden"
+
+msgid "Quick Enquiry"
+msgstr "Schnellanfrage"
+
+msgid "Just the essentials — we'll follow up with any questions."
+msgstr "Nur das Wichtigste — wir melden uns bei Fragen."
+
+msgid "Start Full Quote Wizard"
+msgstr "Zum vollständigen Angebotsassistenten"
+
+msgid "48h response"
+msgstr "Antwort innerhalb 48h"
+
+msgid "From 50 units"
+msgstr "Ab 50 Stück"
+
+msgid "Worldwide delivery"
+msgstr "Weltweiter Versand"

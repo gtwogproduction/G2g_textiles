@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quote Received — G2G Textiles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'homepage/css/style.css' %}" />
+  <style>
+    .success-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .success-card { max-width: 560px; text-align: center; }
+    .success-icon { font-size: 3rem; margin-bottom: 1.5rem; display: block; }
+    .success-title { font-family: var(--font-display); font-size: clamp(3rem, 8vw, 5rem); letter-spacing: 0.04em; line-height: 1; margin-bottom: 1.5rem; }
+    .success-title em { color: var(--navy-light); font-style: normal; }
+    .success-sub { color: var(--muted); margin-bottom: 2.5rem; font-size: 1rem; line-height: 1.7; }
+    .success-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="{% url 'homepage' %}" class="nav__logo">G2G <span>Textiles</span></a>
+  </nav>
+  <div class="success-page">
+    <div class="success-card">
+      <span class="success-icon">✓</span>
+      <h1 class="success-title">Quote<br/><em>Received.</em></h1>
+      <p class="success-sub">
+        Thank you for your detailed submission.<br/>
+        Our team will review your requirements and get back to you with a tailored quote <strong>within 48 hours</strong>.
+      </p>
+      <div class="success-actions">
+        <a href="{% url 'homepage' %}" class="btn btn--primary">Back to Home</a>
+        <a href="{% url 'quote' %}" class="btn btn--ghost">Submit Another</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
