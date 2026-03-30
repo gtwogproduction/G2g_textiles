@@ -45,42 +45,22 @@ class ContactSubmission(models.Model):
         ('flexible', 'Flexible'),
     ]
 
-    # Who
     name = models.CharField(max_length=100)
     company = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=30, blank=True)
     preferred_contact = models.CharField(max_length=20, choices=CONTACT_METHOD_CHOICES, default='any')
-
-    # What
     product_type = models.CharField(max_length=30, choices=PRODUCT_CHOICES, default='other')
     order_size = models.CharField(max_length=20, choices=ORDER_SIZE_CHOICES, default='unsure')
     timeline = models.CharField(max_length=20, choices=TIMELINE_CHOICES, default='flexible')
     design_help = models.CharField(max_length=20, choices=DESIGN_HELP_CHOICES, default='have_files')
     experience = models.CharField(max_length=20, choices=EXPERIENCE_CHOICES, default='first_time')
     message = models.TextField(blank=True)
-
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} — {self.company} ({self.submitted_at.strftime('%d %b %Y')})"
 
-    # German versions
-    hero_eyebrow_de = models.CharField(max_length=100, blank=True)
-    hero_headline_line1_de = models.CharField(max_length=100, blank=True)
-    hero_headline_line2_de = models.CharField(max_length=100, blank=True)
-    hero_headline_line3_de = models.CharField(max_length=100, blank=True)
-    hero_subtext_de = models.TextField(blank=True)
-    hero_cta_primary_de = models.CharField(max_length=60, blank=True)
-    hero_cta_secondary_de = models.CharField(max_length=60, blank=True)
-    hero_badge_text_de = models.CharField(max_length=60, blank=True)
-    cta_label_de = models.CharField(max_length=60, blank=True)
-    cta_headline_line1_de = models.CharField(max_length=100, blank=True)
-    cta_headline_line2_de = models.CharField(max_length=100, blank=True)
-    cta_subtext_de = models.TextField(blank=True)
-    cta_btn_primary_de = models.CharField(max_length=60, blank=True)
-    cta_btn_secondary_de = models.CharField(max_length=60, blank=True)
-    
     class Meta:
         ordering = ['-submitted_at']
         verbose_name = 'Contact Submission'
@@ -174,7 +154,6 @@ class QuoteRequest(models.Model):
         ('lost', 'Lost'),
     ]
 
-    # Block 1
     company_name = models.CharField(max_length=150)
     industry = models.CharField(max_length=30, choices=INDUSTRY_CHOICES)
     industry_other = models.CharField(max_length=100, blank=True)
@@ -183,16 +162,12 @@ class QuoteRequest(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=30, blank=True)
     website = models.URLField(blank=True)
-
-    # Block 2
     product_types = models.CharField(max_length=200)
     product_other = models.CharField(max_length=100, blank=True)
     num_styles = models.PositiveIntegerField(default=1)
     quantity_per_style = models.CharField(max_length=20, choices=QUANTITY_CHOICES)
     gender_sizing = models.CharField(max_length=30, choices=GENDER_CHOICES)
     size_range = models.CharField(max_length=100, blank=True)
-
-    # Block 3
     brand_colours = models.CharField(max_length=200, blank=True)
     print_method = models.CharField(max_length=30, choices=PRINT_METHOD_CHOICES)
     print_positions = models.CharField(max_length=10, choices=PRINT_POSITIONS_CHOICES)
@@ -200,27 +175,20 @@ class QuoteRequest(models.Model):
     design_files_status = models.CharField(max_length=30, choices=FILES_READY_CHOICES)
     pantone_matching = models.BooleanField(default=False)
     customisation_notes = models.TextField(blank=True)
-
-    # Block 4
     desired_delivery = models.CharField(max_length=20, choices=TIMELINE_CHOICES)
     hard_deadline = models.DateField(null=True, blank=True)
     sample_required = models.CharField(max_length=20, choices=SAMPLE_CHOICES)
     delivery_country = models.CharField(max_length=100, default='Switzerland')
     delivery_city = models.CharField(max_length=100, blank=True)
     split_delivery = models.BooleanField(default=False)
-
-    # Block 5
     budget_range = models.CharField(max_length=20, choices=BUDGET_CHOICES)
     budget_notes = models.CharField(max_length=200, blank=True)
-
-    # Block 6
     sustainability = models.CharField(max_length=20, choices=SUSTAINABILITY_CHOICES, default='not_priority')
     certifications_needed = models.CharField(max_length=200, blank=True)
     existing_supplier = models.BooleanField(default=False)
     existing_supplier_notes = models.CharField(max_length=200, blank=True)
     heard_about_us = models.CharField(max_length=100, blank=True)
     additional_notes = models.TextField(blank=True)
-
     submitted_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
 
@@ -233,10 +201,7 @@ class QuoteRequest(models.Model):
         verbose_name_plural = 'Quote Requests'
 
 
-# ===== CMS MODELS =====
-
 class SiteSettings(models.Model):
-    """Single-row settings for hero and general page text."""
     hero_eyebrow = models.CharField(max_length=100, default='B2B Textile Solutions')
     hero_headline_line1 = models.CharField(max_length=100, default='Clothing')
     hero_headline_line2 = models.CharField(max_length=100, default='Built for')
@@ -246,25 +211,39 @@ class SiteSettings(models.Model):
     hero_cta_secondary = models.CharField(max_length=60, default='See How It Works')
     hero_badge_year = models.CharField(max_length=10, default='2015')
     hero_badge_text = models.CharField(max_length=60, default='Trusted by 300+ brands')
-
     cta_label = models.CharField(max_length=60, default='Ready to order?')
     cta_headline_line1 = models.CharField(max_length=100, default="Let's build")
     cta_headline_line2 = models.CharField(max_length=100, default='your order.')
     cta_subtext = models.TextField(default='Get in touch directly or use the full quote wizard — it takes 5 minutes and gives us everything we need to send you a precise quote.')
     cta_btn_primary = models.CharField(max_length=60, default='Start Quote Wizard')
     cta_btn_secondary = models.CharField(max_length=60, default='Quick Contact')
-
     footer_instagram_url = models.URLField(default='https://instagram.com/g2gtextiles', blank=True)
     footer_instagram_handle = models.CharField(max_length=60, default='@g2gtextiles', blank=True)
     footer_copyright = models.CharField(max_length=100, default='© 2025 G2G Textiles.')
+
+    # German translations
+    hero_eyebrow_de = models.CharField(max_length=100, blank=True)
+    hero_headline_line1_de = models.CharField(max_length=100, blank=True)
+    hero_headline_line2_de = models.CharField(max_length=100, blank=True)
+    hero_headline_line3_de = models.CharField(max_length=100, blank=True)
+    hero_subtext_de = models.TextField(blank=True)
+    hero_cta_primary_de = models.CharField(max_length=60, blank=True)
+    hero_cta_secondary_de = models.CharField(max_length=60, blank=True)
+    hero_badge_text_de = models.CharField(max_length=60, blank=True)
+    cta_label_de = models.CharField(max_length=60, blank=True)
+    cta_headline_line1_de = models.CharField(max_length=100, blank=True)
+    cta_headline_line2_de = models.CharField(max_length=100, blank=True)
+    cta_subtext_de = models.TextField(blank=True)
+    cta_btn_primary_de = models.CharField(max_length=60, blank=True)
+    cta_btn_secondary_de = models.CharField(max_length=60, blank=True)
 
     # SEO & Meta
     meta_title_en = models.CharField(max_length=60, blank=True, default='G2G Textiles — B2B Custom Clothing')
     meta_title_de = models.CharField(max_length=60, blank=True, default='G2G Textiles — B2B Textilien')
     meta_description_en = models.TextField(max_length=160, blank=True, default='Premium custom clothing for businesses, sports clubs and brands. From 50 units. Free consulting included.')
     meta_description_de = models.TextField(max_length=160, blank=True, default='Hochwertige Individualkleidung für Unternehmen, Vereine und Marken. Ab 50 Stück. Kostenlose Beratung inklusive.')
-    meta_og_image = models.ImageField(upload_to='meta/', blank=True, null=True, help_text='Social share image (1200x630px recommended)')
-    favicon = models.ImageField(upload_to='meta/', blank=True, null=True, help_text='.ico or .png, 32x32px recommended')
+    meta_og_image = models.ImageField(upload_to='meta/', blank=True, null=True)
+    favicon = models.ImageField(upload_to='meta/', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Site Settings'
@@ -274,7 +253,6 @@ class SiteSettings(models.Model):
         return 'Site Settings'
 
     def save(self, *args, **kwargs):
-        # Enforce single row
         self.pk = 1
         super().save(*args, **kwargs)
 
@@ -319,40 +297,10 @@ class HowItWorksStep(models.Model):
     def __str__(self):
         return f"{self.number} — {self.title}"
 
-
-class PricingTier(models.Model):
-    name = models.CharField(max_length=60)
-    name_de = models.CharField(max_length=60, blank=True, verbose_name='Name (DE)')
-    units = models.CharField(max_length=60)
-    units_de = models.CharField(max_length=60, blank=True, verbose_name='Units (DE)')
-    description = models.TextField()
-    description_de = models.TextField(blank=True, verbose_name='Description (DE)')
-    features = models.TextField(help_text='One feature per line')
-    features_de = models.TextField(blank=True, help_text='One feature per line (DE)', verbose_name='Features (DE)')
-    cta_label = models.CharField(max_length=60, default='Get a Quote')
-    is_highlighted = models.BooleanField(default=False, help_text='Show as "Most Popular"')
-    order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ['order']
-        verbose_name = 'Pricing Tier'
-        verbose_name_plural = 'Pricing Tiers'
-
-    def __str__(self):
-        return self.name
-
-    def get_features_list(self):
-        return [f.strip() for f in self.features.splitlines() if f.strip()]
-
-    def get_features_list_de(self):
-        return [f.strip() for f in self.features_de.splitlines() if f.strip()]
-
-
 class ClientLogo(models.Model):
     name = models.CharField(max_length=100)
     logo = models.ImageField(upload_to='clients/')
-    url = models.URLField(blank=True, help_text='Link to client website (optional)')
+    url = models.URLField(blank=True)
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
@@ -363,7 +311,7 @@ class ClientLogo(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 
 class LegalPage(models.Model):
     PAGE_CHOICES = [
@@ -381,4 +329,3 @@ class LegalPage(models.Model):
     class Meta:
         verbose_name = 'Legal Page'
         verbose_name_plural = 'Legal Pages'
-        
