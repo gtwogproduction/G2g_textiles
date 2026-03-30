@@ -1,0 +1,236 @@
+[
+{
+  "model": "homepage.sitesettings",
+  "pk": 1,
+  "fields": {
+    "hero_eyebrow": "B2B Textile Solutions",
+    "hero_headline_line1": "Clothing",
+    "hero_headline_line2": "Built for",
+    "hero_headline_line3": "Business.",
+    "hero_subtext": "From sports kits to retail lines — G2G Textiles delivers premium custom clothing at scale. 6+ years of manufacturing experience. Free consulting included with every order.",
+    "hero_cta_primary": "Get a Quote",
+    "hero_cta_secondary": "See How It Works",
+    "hero_badge_year": "2015",
+    "hero_badge_text": "Trusted by 300+ brands",
+    "cta_label": "Ready to order?",
+    "cta_headline_line1": "Let's build",
+    "cta_headline_line2": "your order.",
+    "cta_subtext": "Get in touch directly or use the full quote wizard — it takes 5 minutes and gives us everything we need to send you a precise quote.",
+    "cta_btn_primary": "Start Quote Wizard",
+    "cta_btn_secondary": "Quick Contact",
+    "footer_instagram_url": "https://www.instagram.com/g2g_textiles/",
+    "footer_instagram_handle": "@g2gtextiles",
+    "footer_copyright": "© 2025 G2G Textiles.",
+    "hero_eyebrow_de": "",
+    "hero_headline_line1_de": "",
+    "hero_headline_line2_de": "",
+    "hero_headline_line3_de": "",
+    "hero_subtext_de": "",
+    "hero_cta_primary_de": "",
+    "hero_cta_secondary_de": "",
+    "hero_badge_text_de": "",
+    "cta_label_de": "",
+    "cta_headline_line1_de": "",
+    "cta_headline_line2_de": "",
+    "cta_subtext_de": "",
+    "cta_btn_primary_de": "",
+    "cta_btn_secondary_de": "",
+    "meta_title_en": "G2G Textiles — B2B Custom Clothing",
+    "meta_title_de": "G2G Textiles — B2B Textilien",
+    "meta_description_en": "Premium custom clothing for businesses, sports clubs and brands. From 50 units. Free consulting included.",
+    "meta_description_de": "Hochwertige Individualkleidung für Unternehmen, Vereine und Marken. Ab 50 Stück. Kostenlose Beratung inklusive.",
+    "meta_og_image": "",
+    "favicon": ""
+  }
+},
+{
+  "model": "homepage.service",
+  "pk": 1,
+  "fields": {
+    "title": "Corporate & Office Wear",
+    "title_de": "Unternehmens- & Bürobekleidung",
+    "description": "Premium workwear tailored for professional environments. Branded, consistent, and built to last.",
+    "description_de": "Hochwertige Berufsbekleidung für professionelle Auftritte — mit Ihrem Branding, einheitlichem Look und langer Haltbarkeit.",
+    "image": "",
+    "order": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.service",
+  "pk": 2,
+  "fields": {
+    "title": "Sports & Club Kits",
+    "title_de": "Vereins- & Sportbekleidung",
+    "description": "Custom kits for sports clubs of every level — from local teams to regional leagues.",
+    "description_de": "Individuelle Ausrüstung für Sportvereine jeder Größe — vom lokalen Hobbyclub bis zur Regionalliga.",
+    "image": "",
+    "order": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.service",
+  "pk": 3,
+  "fields": {
+    "title": "Retail & Fashion Brands",
+    "title_de": "Retail- & Modemarken",
+    "description": "Private label manufacturing and white-label solutions for fashion retailers and brands.",
+    "description_de": "Eigenmarkenproduktion und White-Label-Lösungen für Modehändler, die auf Qualität setzen.",
+    "image": "",
+    "order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.service",
+  "pk": 4,
+  "fields": {
+    "title": "Bulk & Custom Orders",
+    "title_de": "Großbestellungen & Sonderanfertigungen",
+    "description": "Flexible MOQs, fast turnaround, and full customisation for any industry or occasion.",
+    "description_de": "Flexible Mindestmengen, kurze Lieferzeiten und vollständige Individualisierung — für jede Branche und jeden Anlass.",
+    "image": "",
+    "order": 4,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.howitworksstep",
+  "pk": 1,
+  "fields": {
+    "number": "01",
+    "title": "Get in Touch",
+    "title_de": "Anfrage stellen",
+    "description": "Tell us about your needs — quantities, styles, timeline, and branding requirements.",
+    "description_de": "Teilen Sie uns Ihre Vorstellungen mit — Mengen, Styles, Zeitplan und Branding-Anforderungen.",
+    "order": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.howitworksstep",
+  "pk": 2,
+  "fields": {
+    "number": "02",
+    "title": "Receive a Quote",
+    "title_de": "Angebot erhalten",
+    "description": "We provide a detailed, transparent quote within 48 hours. No hidden fees.",
+    "description_de": "Sie erhalten innerhalb von 48 Stunden ein detailliertes, transparentes Angebot — ohne versteckte Kosten.",
+    "order": 2,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.howitworksstep",
+  "pk": 3,
+  "fields": {
+    "number": "03",
+    "title": "Approve Samples",
+    "title_de": "Muster freigeben",
+    "description": "We send physical samples for your approval before full production begins.",
+    "description_de": "Vor der Produktion erhalten Sie physische Muster zur Freigabe — damit das Ergebnis genau Ihren Vorstellungen entspricht.",
+    "order": 3,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.howitworksstep",
+  "pk": 4,
+  "fields": {
+    "number": "04",
+    "title": "Production & Delivery",
+    "title_de": "Produktion & Lieferung",
+    "description": "Your order is produced to spec and delivered on time, every time.",
+    "description_de": "Ihre Bestellung wird präzise nach Vorgabe produziert und pünktlich geliefert — jedes Mal.",
+    "order": 4,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.clientlogo",
+  "pk": 1,
+  "fields": {
+    "name": "Minimum",
+    "logo": "clients/image.png",
+    "url": "https://minimum.ch",
+    "order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.clientlogo",
+  "pk": 2,
+  "fields": {
+    "name": "Neuf Zuerich",
+    "logo": "clients/image-3.png",
+    "url": "https://neufzuerich.ch/password",
+    "order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.clientlogo",
+  "pk": 3,
+  "fields": {
+    "name": "Bloc Magasin",
+    "logo": "clients/bloc_wordmark_black.png",
+    "url": "https://www.bloc-magasin.ch",
+    "order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.clientlogo",
+  "pk": 4,
+  "fields": {
+    "name": "Graffland",
+    "logo": "clients/cropped-Graffland_Logo_White_Transparent_Shadow2-scaled-1.png",
+    "url": "https://graffland.ch",
+    "order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.clientlogo",
+  "pk": 5,
+  "fields": {
+    "name": "WOZ - Wochenzeitung",
+    "logo": "clients/images-2.png",
+    "url": "https://www.woz.ch",
+    "order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.clientlogo",
+  "pk": 6,
+  "fields": {
+    "name": "Road Runnerz",
+    "logo": "clients/Bildschirmfoto_2026-03-26_um_14.17.50.png",
+    "url": "https://www.instagram.com/roadrunnerzsupply/",
+    "order": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "homepage.legalpage",
+  "pk": 1,
+  "fields": {
+    "page": "impressum",
+    "title": "Impressum",
+    "content": "G2G Textiles\r\n\r\nFirmenname: G2G Textiles\r\nAdresse: [Ihre Adresse], Zürich, Schweiz\r\nE-Mail: production@gtwog.ch\r\nWebsite: www.g2gtextiles.com\r\n\r\nHandelsregistereintrag\r\n[Falls eingetragen: Handelsregister des Kantons Zürich, UID: CHE-XXX.XXX.XXX]\r\n\r\nMehrwertsteuer\r\n[Falls MwSt-pflichtig: MwSt-Nummer: CHE-XXX.XXX.XXX MWST]\r\n\r\nVerantwortlich für den Inhalt\r\n[Ihr Name], G2G Textiles\r\n\r\nHaftungsausschluss\r\nDie Inhalte dieser Website wurden mit grösster Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.\r\n\r\nUrheberrecht\r\nDie durch den Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem Schweizer Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung ausserhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.",
+    "last_updated": "2026-03-26"
+  }
+},
+{
+  "model": "homepage.legalpage",
+  "pk": 2,
+  "fields": {
+    "page": "agb",
+    "title": "AGB",
+    "content": "Allgemeine Geschäftsbedingungen der G2G Textiles\r\n\r\nStand: März 2025\r\n\r\n1. Geltungsbereich\r\nDiese Allgemeinen Geschäftsbedingungen gelten für alle Bestellungen und Geschäftsbeziehungen zwischen G2G Textiles (nachfolgend «G2G») und ihren Kunden (nachfolgend «Auftraggeber»).\r\n\r\n2. Angebote und Vertragsabschluss\r\nAlle Angebote von G2G sind freibleibend und unverbindlich. Ein Vertrag kommt erst durch die schriftliche Auftragsbestätigung von G2G zustande.\r\n\r\n3. Muster und Produktionsfreigabe\r\nVor Beginn der Produktion erstellt G2G auf Wunsch ein physisches Muster. Die Produktion beginnt erst nach schriftlicher Freigabe durch den Auftraggeber. G2G empfiehlt grundsätzlich die Abnahme eines Musters.\r\n\r\n4. Preise und Zahlungsbedingungen\r\nAlle Preise verstehen sich in Schweizer Franken (CHF) zuzüglich der gesetzlichen Mehrwertsteuer, sofern anwendbar. Zahlungsbedingungen werden im jeweiligen Angebot festgelegt. Bei Zahlungsverzug behält sich G2G vor, Verzugszinsen zu berechnen.\r\n\r\n5. Lieferung und Lieferfristen\r\nLieferfristen werden im Angebot angegeben und beginnen nach Eingang der Anzahlung sowie der Produktionsfreigabe. G2G ist nicht verantwortlich für Verzögerungen, die durch höhere Gewalt, Lieferengpässe oder externe Faktoren entstehen.\r\n\r\n6. Eigentumsrecht\r\nDie gelieferte Ware bleibt bis zur vollständigen Bezahlung Eigentum von G2G.\r\n\r\n7. Reklamationen und Mängelrüge\r\nMängel sind innerhalb von 10 Tagen nach Erhalt der Ware schriftlich zu melden. Bei berechtigten Reklamationen entscheidet G2G über Nachbesserung, Ersatzlieferung oder Gutschrift.\r\n\r\n8. Haftungsbeschränkung\r\nG2G haftet nicht für indirekte Schäden oder Folgeschäden. Die Haftung ist auf den Auftragswert begrenzt.\r\n\r\n9. Datenschutz\r\nG2G behandelt alle Kundendaten vertraulich und gemäss dem Schweizer Datenschutzgesetz (DSG).\r\n\r\n10. Anwendbares Recht und Gerichtsstand\r\nEs gilt Schweizer Recht. Gerichtsstand ist Zürich, Schweiz.\r\n\r\nFür Fragen zu diesen AGB wenden Sie sich bitte an: production@gtwog.ch",
+    "last_updated": "2026-03-26"
+  }
+}
+]
