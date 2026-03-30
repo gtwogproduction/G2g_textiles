@@ -322,7 +322,6 @@ class PricingTier(models.Model):
     features = models.TextField(help_text='One feature per line')
     features_de = models.TextField(blank=True, help_text='One feature per line (DE)', verbose_name='Features (DE)')
     cta_label = models.CharField(max_length=60, default='Get a Quote')
-    cta_label_de = models.CharField(max_length=60, blank=True, default='Angebot anfragen', verbose_name='CTA Label (DE)')
     is_highlighted = models.BooleanField(default=False, help_text='Show as "Most Popular"')
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
