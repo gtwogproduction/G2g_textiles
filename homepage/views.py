@@ -315,8 +315,12 @@ def create_super(request):
 def migration_status(request):
     from django.http import HttpResponse
     from django.db import connection
+    from homepage.models import SiteSettings
     cursor = connection.cursor()
     cursor.execute("SELECT app, name FROM django_migrations WHERE app='homepage' ORDER BY name")
     rows = cursor.fetchall()
-    result = "\n".join([f"{r[0]} - {r[1]}" for r in rows])
+    migrations = "\n".join([f"{r[0]} - {r[1]}" for r in rows])
+    fields = [f.name for f in SiteSettings._meta.get_fields()]
+    de_fields = [f for f in fields if f.endswith('_de')]
+    result = f"MIGRATIONS:\n{migrations}\n\nDE FIELDS ON MODEL:\n{chr(10).join(de_fields)}"
     return HttpResponse(result, content_type='text/plain')
