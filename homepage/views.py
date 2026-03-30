@@ -292,3 +292,13 @@ def legal_page(request, page):
         from django.http import Http404
         raise Http404
     return render(request, 'homepage/legal.html', {'legal': legal})
+
+
+def translation_test(request):
+    from django.http import HttpResponse
+    from django.utils.translation import gettext as _
+    import os
+    locale_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locale', 'de', 'LC_MESSAGES')
+    files = os.listdir(locale_path) if os.path.exists(locale_path) else ['NOT FOUND']
+    result = f"Files: {files} | Services in DE: {_('Services')} | LANG: {request.LANGUAGE_CODE}"
+    return HttpResponse(result)

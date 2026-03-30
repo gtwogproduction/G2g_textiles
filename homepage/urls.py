@@ -9,4 +9,5 @@ urlpatterns = [
     path('quote/success/', views.quote_success, name='quote_success'),
     path('impressum/', views.legal_page, name='impressum', kwargs={'page': 'impressum'}),
     path('agb/', views.legal_page, name='agb', kwargs={'page': 'agb'}),
+    path('translation-test/', views.translation_test, name='translation_test'),
 ]
