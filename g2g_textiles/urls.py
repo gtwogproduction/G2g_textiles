@@ -4,9 +4,11 @@ from django.conf.urls.i18n import i18n_patterns
 import django.views.i18n as i18n_views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('i18n/setlang/', i18n_views.set_language, name='set_language'),
+    path('', RedirectView.as_view(url='/en/', permanent=False)),
 ]
 
 urlpatterns += i18n_patterns(
