@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: g2g-textiles
+    env: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn g2g_textiles.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: EMAIL_HOST_USER
+        value: production@gtwog.ch
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+```
+
+The build command now does three things in order — installs packages, collects static files, and runs migrations — all before the server starts.
+
+`EMAIL_HOST_PASSWORD` is set to `sync: false` which means Render will prompt you to enter it manually in the dashboard so it never appears in your code or config files.
+
+Now push everything to GitHub:
+```
+git add .
+git commit -m "Add Render deployment config"
+git push
