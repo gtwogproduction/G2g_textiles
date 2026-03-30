@@ -258,6 +258,14 @@ class SiteSettings(models.Model):
     footer_instagram_handle = models.CharField(max_length=60, default='@g2gtextiles', blank=True)
     footer_copyright = models.CharField(max_length=100, default='© 2025 G2G Textiles.')
 
+    # SEO & Meta
+    meta_title_en = models.CharField(max_length=60, blank=True, default='G2G Textiles — B2B Custom Clothing')
+    meta_title_de = models.CharField(max_length=60, blank=True, default='G2G Textiles — B2B Textilien')
+    meta_description_en = models.TextField(max_length=160, blank=True, default='Premium custom clothing for businesses, sports clubs and brands. From 50 units. Free consulting included.')
+    meta_description_de = models.TextField(max_length=160, blank=True, default='Hochwertige Individualkleidung für Unternehmen, Vereine und Marken. Ab 50 Stück. Kostenlose Beratung inklusive.')
+    meta_og_image = models.ImageField(upload_to='meta/', blank=True, null=True, help_text='Social share image (1200x630px recommended)')
+    favicon = models.ImageField(upload_to='meta/', blank=True, null=True, help_text='.ico or .png, 32x32px recommended')
+
     class Meta:
         verbose_name = 'Site Settings'
         verbose_name_plural = 'Site Settings'
@@ -373,3 +381,4 @@ class LegalPage(models.Model):
     class Meta:
         verbose_name = 'Legal Page'
         verbose_name_plural = 'Legal Pages'
+        

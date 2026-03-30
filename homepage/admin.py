@@ -53,6 +53,11 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('Footer', {'fields': (
             'footer_instagram_url', 'footer_instagram_handle', 'footer_copyright',
         )}),
+        ('SEO & Meta', {'fields': (
+            'meta_title_en', 'meta_title_de',
+            'meta_description_en', 'meta_description_de',
+            'meta_og_image', 'favicon',
+        )}),
     )
 
     def has_add_permission(self, request):
