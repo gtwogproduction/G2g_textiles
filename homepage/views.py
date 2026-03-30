@@ -311,3 +311,12 @@ def create_super(request):
         User.objects.create_superuser('admin', 'production@gtwog.ch', 'changeme123')
         return HttpResponse('Superuser created - delete this view now!')
     return HttpResponse('Already exists')
+
+def migration_status(request):
+    from django.http import HttpResponse
+    from django.db import connection
+    cursor = connection.cursor()
+    cursor.execute("SELECT app, name FROM django_migrations WHERE app='homepage' ORDER BY name")
+    rows = cursor.fetchall()
+    result = "\n".join([f"{r[0]} - {r[1]}" for r in rows])
+    return HttpResponse(result, content_type='text/plain')

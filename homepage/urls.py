@@ -11,4 +11,5 @@ urlpatterns = [
     path('agb/', views.legal_page, name='agb', kwargs={'page': 'agb'}),
     path('translation-test/', views.translation_test, name='translation_test'),
     path('setup-admin/', views.create_super, name='create_super'),
+    path('migration-status/', views.migration_status, name='migration_status'),
 ]
