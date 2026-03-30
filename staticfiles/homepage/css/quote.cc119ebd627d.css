@@ -1,0 +1,32 @@
+/* ===== QUOTE PAGE OVERRIDES FOR LIGHT THEME ===== */
+.quote-sidebar { background: var(--bg-alt); }
+.quote-panel { background: var(--bg); }
+.step-nav__dot { border-color: rgba(0,0,0,0.15); }
+.quote-form input[type="text"],
+.quote-form input[type="email"],
+.quote-form input[type="url"],
+.quote-form input[type="number"],
+.quote-form input[type="date"],
+.quote-form textarea,
+.quote-form select {
+  background: var(--surface) !important;
+  border: 1px solid rgba(0,0,0,0.12);
+  color: var(--white) !important;
+  -webkit-text-fill-color: var(--white);
+}
+.quote-form input:-webkit-autofill,
+.quote-form input:-webkit-autofill:hover,
+.quote-form input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  -webkit-text-fill-color: var(--white) !important;
+}
+.checkbox-grid label,
+.radio-cards label,
+.radio-cards ul li label,
+.checkbox-grid ul li label,
+.radio-list ul li label,
+.country-card {
+  background: var(--surface);
+  border-color: rgba(0,0,0,0.1);
+  color: var(--white);
+}
