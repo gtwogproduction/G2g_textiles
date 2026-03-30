@@ -4,7 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Get a Quote — G2G Textiles</title>
+  <title>{% if LANGUAGE_CODE == 'de' %}Angebot anfordern — G2G Textiles{% else %}Get a Quote — G2G Textiles{% endif %}</title>
+  <meta name="description" content="{% if LANGUAGE_CODE == 'de' %}Fordern Sie in 5 Minuten ein massgeschneidertes Angebot an.{% else %}Request a tailored quote in 5 minutes.{% endif %}" />
+  <meta property="og:title" content="G2G Textiles — Quote" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.gtwog.ch/quote/" />
+  {% if site_settings.favicon %}
+  <link rel="icon" href="{{ site_settings.favicon.url }}" />
+  {% else %}
+  <link rel="icon" href="{% static 'homepage/img/favicon.ico' %}" />
+  {% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />

@@ -5,6 +5,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ legal.title }} — G2G Textiles</title>
+  <meta name="description" content="{{ legal.title }} — G2G Textiles" />
+  <meta property="og:title" content="{{ legal.title }} — G2G Textiles" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.gtwog.ch" />
+  {% if site_settings.favicon %}
+  <link rel="icon" href="{{ site_settings.favicon.url }}" />
+  {% else %}
+  <link rel="icon" href="{% static 'homepage/img/favicon.ico' %}" />
+  {% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />

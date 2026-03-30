@@ -2,10 +2,12 @@
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
-  <title>{{ site_settings.meta_title_en }}</title>
-  <meta name="description" content="{{ site_settings.meta_description_en }}" />
-  <meta property="og:title" content="{{ site_settings.meta_title_en }}" />
-  <meta property="og:description" content="{{ site_settings.meta_description_en }}" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% if is_de %}{{ site_settings.meta_title_de }}{% else %}{{ site_settings.meta_title_en }}{% endif %}</title>
+  <meta name="description" content="{% if is_de %}{{ site_settings.meta_description_de }}{% else %}{{ site_settings.meta_description_en }}{% endif %}" />
+  <meta property="og:title" content="{% if is_de %}{{ site_settings.meta_title_de }}{% else %}{{ site_settings.meta_title_en }}{% endif %}" />
+  <meta property="og:description" content="{% if is_de %}{{ site_settings.meta_description_de }}{% else %}{{ site_settings.meta_description_en }}{% endif %}" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.gtwog.ch" />
   {% if site_settings.meta_og_image %}

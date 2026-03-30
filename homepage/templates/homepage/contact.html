@@ -4,7 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contact Us — G2G Textiles</title>
+  <title>{% if LANGUAGE_CODE == 'de' %}Kontakt — G2G Textiles{% else %}Contact — G2G Textiles{% endif %}</title>
+  <meta name="description" content="{% if LANGUAGE_CODE == 'de' %}Nehmen Sie Kontakt mit G2G Textiles auf. Wir antworten innerhalb von 48 Stunden.{% else %}Get in touch with G2G Textiles. We respond within 48 hours.{% endif %}" />
+  <meta property="og:title" content="G2G Textiles — Contact" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.gtwog.ch/contact/" />
+  {% if site_settings.favicon %}
+  <link rel="icon" href="{{ site_settings.favicon.url }}" />
+  {% else %}
+  <link rel="icon" href="{% static 'homepage/img/favicon.ico' %}" />
+  {% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />

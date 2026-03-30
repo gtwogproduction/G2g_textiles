@@ -101,6 +101,7 @@ def homepage(request):
 
 
 def contact(request):
+    from .models import SiteSettings
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
@@ -109,7 +110,19 @@ def contact(request):
             return redirect('contact')
     else:
         form = ContactForm()
-    return render(request, 'homepage/contact.html', {'form': form})
+    site_settings = SiteSettings.get()
+    return render(request, 'homepage/contact.html', {'form': form, 'site_settings': site_settings})
+
+
+def legal_page(request, page):
+    from .models import LegalPage, SiteSettings
+    try:
+        legal = LegalPage.objects.get(page=page)
+    except LegalPage.DoesNotExist:
+        from django.http import Http404
+        raise Http404
+    site_settings = SiteSettings.get()
+    return render(request, 'homepage/legal.html', {'legal': legal, 'site_settings': site_settings})
 
 
 def quote(request, step=1):
@@ -282,16 +295,6 @@ def _submit_quote(request):
 
 def quote_success(request):
     return render(request, 'homepage/quote_success.html')
-
-
-def legal_page(request, page):
-    from .models import LegalPage
-    try:
-        legal = LegalPage.objects.get(page=page)
-    except LegalPage.DoesNotExist:
-        from django.http import Http404
-        raise Http404
-    return render(request, 'homepage/legal.html', {'legal': legal})
 
 
 def translation_test(request):
