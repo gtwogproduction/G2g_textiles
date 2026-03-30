@@ -320,7 +320,9 @@ def migration_status(request):
     cursor.execute("SELECT app, name FROM django_migrations WHERE app='homepage' ORDER BY name")
     rows = cursor.fetchall()
     migrations = "\n".join([f"{r[0]} - {r[1]}" for r in rows])
-    fields = [f.name for f in SiteSettings._meta.get_fields()]
-    de_fields = [f for f in fields if f.endswith('_de')]
-    result = f"MIGRATIONS:\n{migrations}\n\nDE FIELDS ON MODEL:\n{chr(10).join(de_fields)}"
+    all_fields = [f.name for f in SiteSettings._meta.get_fields()]
+    de_fields = [f for f in all_fields if '_de' in f]
+    cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='homepage_sitesettings' AND column_name LIKE '%_de%'")
+    db_columns = [r[0] for r in cursor.fetchall()]
+    result = f"MIGRATIONS:\n{migrations}\n\nMODEL DE FIELDS:\n{chr(10).join(de_fields) or 'NONE'}\n\nDB COLUMNS:\n{chr(10).join(db_columns) or 'NONE'}"
     return HttpResponse(result, content_type='text/plain')
