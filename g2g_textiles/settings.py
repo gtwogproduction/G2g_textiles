@@ -9,6 +9,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me-in-producti
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
+    'gtwog.ch',
+    'www.gtwog.ch',
     'g2g-textiles.onrender.com',
     'localhost',
     '127.0.0.1',
