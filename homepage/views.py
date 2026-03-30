@@ -302,3 +302,12 @@ def translation_test(request):
     files = os.listdir(locale_path) if os.path.exists(locale_path) else ['NOT FOUND']
     result = f"Files: {files} | Services in DE: {_('Services')} | LANG: {request.LANGUAGE_CODE}"
     return HttpResponse(result)
+
+
+def create_super(request):
+    from django.http import HttpResponse
+    from django.contrib.auth.models import User
+    if not User.objects.filter(username='admin').exists():
+        User.objects.create_superuser('admin', 'production@gtwog.ch', 'changeme123')
+        return HttpResponse('Superuser created - delete this view now!')
+    return HttpResponse('Already exists')
