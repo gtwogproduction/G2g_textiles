@@ -258,8 +258,7 @@ class SiteSettings(models.Model):
 
     @classmethod
     def get(cls):
-        obj, _ = cls.objects.get_or_create(pk=1)
-        return obj
+        return cls.objects.get(pk=1)
 
 
 class Service(models.Model):
@@ -329,3 +328,4 @@ class LegalPage(models.Model):
     class Meta:
         verbose_name = 'Legal Page'
         verbose_name_plural = 'Legal Pages'
+        

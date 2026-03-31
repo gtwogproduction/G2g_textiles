@@ -64,7 +64,7 @@ def homepage(request):
 
     is_de = current_lang.startswith('de')
 
-    site_settings = SiteSettings.get()
+    site_settings = SiteSettings.objects.get(pk=1)
     localised_settings = LocalisedSettings(site_settings, is_de)
 
     services_qs = Service.objects.filter(is_active=True)
@@ -110,7 +110,7 @@ def contact(request):
             return redirect('contact')
     else:
         form = ContactForm()
-    site_settings = SiteSettings.get()
+    site_settings = SiteSettings.objects.get(pk=1)
     return render(request, 'homepage/contact.html', {'form': form, 'site_settings': site_settings})
 
 
@@ -121,7 +121,7 @@ def legal_page(request, page):
     except LegalPage.DoesNotExist:
         from django.http import Http404
         raise Http404
-    site_settings = SiteSettings.get()
+    site_settings = SiteSettings.objects.get(pk=1)
     return render(request, 'homepage/legal.html', {'legal': legal, 'site_settings': site_settings})
 
 
