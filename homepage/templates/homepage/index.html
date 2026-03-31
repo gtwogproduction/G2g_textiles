@@ -52,12 +52,12 @@
   <section class="hero">
     <div class="hero__noise"></div>
     <div class="hero__content">
-      <p class="hero__eyebrow">{% trans "B2B Textile Solutions" %}</p>
-      <h1 class="hero__headline">{% trans "Clothing" %}<br /><em>{% trans "Built for" %}</em><br />{% trans "Business." %}</h1>
+      <p class="hero__eyebrow">{{ site_settings.hero_eyebrow }}</p>
+      <h1 class="hero__headline">{{ site_settings.hero_headline_line1 }}<br /><em>{{ site_settings.hero_headline_line2 }}</em><br />{{ site_settings.hero_headline_line3 }}</h1>
       <p class="hero__sub">{{ site_settings.hero_subtext }}</p>
       <div class="hero__actions">
-        <a href="{% url 'quote' %}" class="btn btn--primary">{% trans "Get a Quote" %}</a>
-        <a href="#how-it-works" class="btn btn--ghost">{% trans "See How It Works" %}</a>
+        <a href="{% url 'quote' %}" class="btn btn--primary">{{ site_settings.hero_cta_primary }}</a>
+        <a href="#how-it-works" class="btn btn--ghost">{{ site_settings.hero_cta_secondary }}</a>
       </div>
     </div>
     <div class="hero__badge">
@@ -158,8 +158,8 @@
           <p class="contact-cta__sub">{{ site_settings.cta_subtext }}</p>
         </div>
         <div class="contact-cta__actions">
-          <a href="{% url 'quote' %}" class="btn btn--primary">{% trans "Start Quote Wizard" %} →</a>
-          <a href="{% url 'contact' %}" class="btn btn--ghost">{% trans "Quick Contact" %}</a>
+          <a href="{% url 'quote' %}" class="btn btn--primary">{{ site_settings.cta_btn_primary }} →</a>
+          <a href="{% url 'contact' %}" class="btn btn--ghost">{{ site_settings.cta_btn_secondary }}</a>
         </div>
       </div>
     </div>
