@@ -36,7 +36,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('Hero Section — English', {'fields': (
             'hero_eyebrow', 'hero_headline_line1', 'hero_headline_line2', 'hero_headline_line3',
             'hero_subtext', 'hero_cta_primary', 'hero_cta_secondary',
-            'hero_badge_year', 'hero_badge_text',
+            'hero_badge_year', 'hero_badge_text', 'hero_video',
         )}),
         ('Hero Section — Deutsch', {'fields': (
             'hero_eyebrow_de', 'hero_headline_line1_de', 'hero_headline_line2_de', 'hero_headline_line3_de',

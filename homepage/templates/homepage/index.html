@@ -51,6 +51,11 @@
   <!-- HERO -->
   <section class="hero">
     <div class="hero__noise"></div>
+    {% if site_settings.hero_video %}
+    <video class="hero__video" autoplay muted loop playsinline>
+      <source src="{{ site_settings.hero_video.url }}" type="video/mp4" />
+    </video>
+    {% endif %}
     <div class="hero__content">
       <p class="hero__eyebrow">{{ site_settings.hero_eyebrow }}</p>
       <h1 class="hero__headline">{{ site_settings.hero_headline_line1 }}<br /><em>{{ site_settings.hero_headline_line2 }}</em><br />{{ site_settings.hero_headline_line3 }}</h1>
