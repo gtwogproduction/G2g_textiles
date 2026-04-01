@@ -1,4 +1,5 @@
 from django.db import models
+from cloudinary_storage.storage import VideoMediaCloudinaryStorage
 
 
 class ContactSubmission(models.Model):
@@ -202,7 +203,13 @@ class QuoteRequest(models.Model):
 
 
 class SiteSettings(models.Model):
-    hero_video = models.FileField(upload_to='hero/', blank=True, null=True, help_text='MP4 or WebM video for hero background')
+    hero_video = models.FileField(
+    upload_to='hero/',
+    blank=True,
+    null=True,
+    storage=VideoMediaCloudinaryStorage(),
+    help_text='MP4 or WebM video for hero background'
+)
     hero_eyebrow = models.CharField(max_length=100, default='B2B Textile Solutions')
     hero_headline_line1 = models.CharField(max_length=100, default='Clothing')
     hero_headline_line2 = models.CharField(max_length=100, default='Built for')
