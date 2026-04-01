@@ -373,13 +373,20 @@ img { max-width: 100%; display: block; }
   transition: transform 0.4s ease;
 }
 .service-card:hover .service-card__img img { transform: scale(1.04); }
-.service-card__body { padding: 1.75rem 2rem; }
+.service-card__body {
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
 .service-card__title {
   font-family: var(--font-display);
   font-size: 1.4rem;
   letter-spacing: 0.04em;
   margin-bottom: 0.75rem;
   color: var(--white);
+  min-height: 3.5rem;
+  display: flex;
+  align-items: flex-end;
 }
 .service-card__desc { color: var(--muted); font-size: 0.9rem; line-height: 1.65; }
 
