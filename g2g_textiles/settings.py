@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'g2g_textiles.wsgi.application'
+ROOT_URLCONF = 'g2g_textiles.urls'
 
 TEMPLATES = [
     {
