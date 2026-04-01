@@ -64,8 +64,12 @@ def homepage(request):
 
     is_de = current_lang.startswith('de')
 
-    site_settings = SiteSettings.objects.get(pk=1)
+    site_settings = SiteSettings.get()
     localised_settings = LocalisedSettings(site_settings, is_de)
+    if site_settings.hero_video:
+        print(f"DEBUG VIDEO URL: {site_settings.hero_video.url}")
+    else:
+        print("DEBUG VIDEO URL: no video set")
 
     services_qs = Service.objects.filter(is_active=True)
     steps_qs = HowItWorksStep.objects.filter(is_active=True)
