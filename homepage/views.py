@@ -333,3 +333,30 @@ def migration_status(request):
     db_columns = [r[0] for r in cursor.fetchall()]
     result = f"MIGRATIONS:\n{migrations}\n\nMODEL DE FIELDS:\n{chr(10).join(de_fields) or 'NONE'}\n\nDB COLUMNS:\n{chr(10).join(db_columns) or 'NONE'}"
     return HttpResponse(result, content_type='text/plain')
+
+def blog_list(request):
+    from .models import BlogPost, BlogCategory
+    category_slug = request.GET.get('category', '')
+    categories = BlogCategory.objects.all()
+    posts = BlogPost.objects.filter(is_published=True)
+    if category_slug:
+        posts = posts.filter(category__slug=category_slug)
+    return render(request, 'homepage/blog_list.html', {
+        'posts': posts,
+        'categories': categories,
+        'active_category': category_slug,
+    })
+
+
+def blog_detail(request, slug):
+    from .models import BlogPost
+    from django.http import Http404
+    try:
+        post = BlogPost.objects.get(slug=slug, is_published=True)
+    except BlogPost.DoesNotExist:
+        raise Http404
+    is_de = getattr(request, 'LANGUAGE_CODE', 'en').startswith('de')
+    return render(request, 'homepage/blog_detail.html', {
+        'post': post,
+        'is_de': is_de,
+    })

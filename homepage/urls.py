@@ -12,4 +12,6 @@ urlpatterns = [
     path('translation-test/', views.translation_test, name='translation_test'),
     path('setup-admin/', views.create_super, name='create_super'),
     path('migration-status/', views.migration_status, name='migration_status'),
+    path('blog/', views.blog_list, name='blog_list'),
+    path('blog/<slug:slug>/', views.blog_detail, name='blog_detail'),
 ]

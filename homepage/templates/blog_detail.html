@@ -1,0 +1,84 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ post.title }} — G2G Textiles</title>
+  <meta name="description" content="{{ post.excerpt }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'homepage/css/style.css' %}" />
+  <link rel="stylesheet" href="{% static 'homepage/css/blog.css' %}" />
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="{% url 'homepage' %}" class="nav__logo">G2G <span>Textiles</span></a>
+    <ul class="nav__links">
+      <li><a href="{% url 'homepage' %}#services">{% trans "Services" %}</a></li>
+      <li><a href="{% url 'homepage' %}#how-it-works">{% trans "How It Works" %}</a></li>
+      <li><a href="{% url 'blog_list' %}" class="active">Blog</a></li>
+      <li><a href="{% url 'contact' %}" class="nav__cta">{% trans "Contact Us" %}</a></li>
+    </ul>
+    <button class="nav__burger" aria-label="Toggle menu">&#9776;</button>
+  </nav>
+
+  <main class="blog-post-main">
+    <div class="container container--narrow">
+
+      <div class="blog-post__back">
+        <a href="{% url 'blog_list' %}">← Back to Blog</a>
+      </div>
+
+      <div class="blog-post__meta">
+        <span class="blog-card__type blog-card__type--{{ post.post_type }}">{{ post.get_post_type_display }}</span>
+        {% if post.category %}<span class="blog-card__cat">{{ post.category.name }}</span>{% endif %}
+        <span class="blog-post__date">{{ post.published_at|date:"d F Y" }}</span>
+      </div>
+
+      <h1 class="blog-post__title">{% if is_de and post.title_de %}{{ post.title_de }}{% else %}{{ post.title }}{% endif %}</h1>
+
+      {% if post.cover_image %}
+      <div class="blog-post__cover">
+        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" />
+      </div>
+      {% endif %}
+
+      {% if post.video_url %}
+      <div class="blog-post__video">
+        <iframe src="{{ post.video_url }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      {% endif %}
+
+      <div class="blog-post__body">
+        {% if is_de and post.body_de %}
+          {{ post.body_de|safe }}
+        {% else %}
+          {{ post.body|safe }}
+        {% endif %}
+      </div>
+
+      <div class="blog-post__cta">
+        <p>Ready to start your order?</p>
+        <a href="{% url 'quote' %}" class="btn btn--primary">Get a Quote →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p class="footer__logo">G2G <span>Textiles</span></p>
+      <div class="footer__legal">
+        <a href="{% url 'impressum' %}">Impressum</a>
+        <a href="{% url 'agb' %}">AGB</a>
+      </div>
+      <p class="footer__copy">© 2025 G2G Textiles. {% trans "All rights reserved." %}</p>
+    </div>
+  </footer>
+
+  <script src="{% static 'homepage/js/main.js' %}"></script>
+</body>
+</html>

@@ -336,4 +336,49 @@ class LegalPage(models.Model):
     class Meta:
         verbose_name = 'Legal Page'
         verbose_name_plural = 'Legal Pages'
-        
+
+
+class BlogCategory(models.Model):
+    name = models.CharField(max_length=60)
+    name_de = models.CharField(max_length=60, blank=True)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Blog Category'
+        verbose_name_plural = 'Blog Categories'
+        ordering = ['name']
+
+
+class BlogPost(models.Model):
+    POST_TYPE_CHOICES = [
+        ('article', 'Article / Guide'),
+        ('case_study', 'Case Study'),
+        ('video', 'Video Post'),
+    ]
+
+    title = models.CharField(max_length=200)
+    title_de = models.CharField(max_length=200, blank=True)
+    slug = models.SlugField(unique=True, max_length=200)
+    post_type = models.CharField(max_length=20, choices=POST_TYPE_CHOICES, default='article')
+    category = models.ForeignKey(BlogCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
+    excerpt = models.TextField(max_length=300, blank=True, help_text='Short summary shown on listing page')
+    excerpt_de = models.TextField(max_length=300, blank=True)
+    body = models.TextField(help_text='HTML content — use &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;a&gt; etc.')
+    body_de = models.TextField(blank=True)
+    cover_image = models.ImageField(upload_to='blog/', blank=True, null=True)
+    video_url = models.URLField(blank=True, help_text='YouTube or Vimeo embed URL e.g. https://www.youtube.com/embed/xxxxx')
+    is_published = models.BooleanField(default=False)
+    published_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-published_at']
+        verbose_name = 'Blog Post'
+        verbose_name_plural = 'Blog Posts'
