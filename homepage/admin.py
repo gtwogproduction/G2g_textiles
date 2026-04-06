@@ -126,7 +126,7 @@ class BlogCategoryAdmin(admin.ModelAdmin):
 class BlogPostImageInline(admin.TabularInline):
     model = BlogPostImage
     extra = 3
-    fields = ['image', 'caption', 'order', 'image_preview']
+    fields = ['image', 'caption', 'caption_de', 'order', 'image_preview']
     readonly_fields = ['image_preview']
 
     @admin.display(description='Preview')
@@ -138,7 +138,6 @@ class BlogPostImageInline(admin.TabularInline):
                 obj.image.url, obj.image.url
             )
         return '—'
-
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):

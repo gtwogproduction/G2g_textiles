@@ -389,6 +389,7 @@ class BlogPostImage(models.Model):
     post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='blog/images/')
     caption = models.CharField(max_length=200, blank=True)
+    caption_de = models.CharField(max_length=200, blank=True, verbose_name='Caption (DE)')
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
