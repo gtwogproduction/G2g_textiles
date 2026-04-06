@@ -80,20 +80,6 @@
   transform: translateY(-2px);
 }
 
-.blog-card__img {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  background: var(--bg-alt);
-}
-
-.blog-card__img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s;
-}
-
 .blog-card:hover .blog-card__img img {
   transform: scale(1.04);
 }
@@ -213,20 +199,6 @@
   line-height: 1;
   color: var(--white);
   margin-bottom: 2rem;
-}
-
-.blog-post__cover {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border-radius: var(--radius);
-  margin-bottom: 2.5rem;
-}
-
-.blog-post__cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .blog-post__video {
@@ -381,7 +353,7 @@
   white-space: nowrap;
 }
 
-/* Figures / image placeholders */
+/* ===== FULL WIDTH POST IMAGES ===== */
 .post-figure {
   margin: 2rem 0;
   border-radius: var(--radius);
@@ -393,17 +365,7 @@
   width: 100%;
   height: auto;
   display: block;
-}
-
-.post-figure__placeholder {
-  background: var(--bg-alt);
-  border-bottom: 1px solid var(--border);
-  padding: 2.5rem 1.5rem;
-  font-size: 0.82rem;
-  color: var(--muted);
-  text-align: center;
-  font-style: italic;
-  letter-spacing: 0.02em;
+  object-fit: contain;
 }
 
 .post-figure figcaption {
@@ -412,6 +374,41 @@
   color: var(--muted);
   background: var(--surface);
   font-style: italic;
+}
+
+/* ===== BLOG CARD IMAGE — full visibility ===== */
+.blog-card__img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--bg-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blog-card__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transition: transform 0.4s;
+}
+
+/* ===== BLOG POST COVER — full visibility ===== */
+.blog-post__cover {
+  width: 100%;
+  margin-bottom: 2.5rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.blog-post__cover img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
 /* Post list (ul.post-list) */
