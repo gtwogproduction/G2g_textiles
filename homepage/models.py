@@ -358,7 +358,8 @@ class BlogPost(models.Model):
         ('case_study', 'Case Study'),
         ('video', 'Video Post'),
     ]
-
+    meta_title = models.CharField(max_length=60, blank=True, help_text='SEO title (max 60 chars). Falls back to post title if empty.')
+    meta_description = models.TextField(max_length=160, blank=True, help_text='SEO description (max 160 chars). Falls back to excerpt if empty.')
     title = models.CharField(max_length=200)
     title_de = models.CharField(max_length=200, blank=True)
     slug = models.SlugField(unique=True, max_length=200)

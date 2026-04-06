@@ -3,6 +3,7 @@ from django.utils.html import format_html
 from .models import (
     ContactSubmission, QuoteRequest,
     SiteSettings, Service, HowItWorksStep, ClientLogo, LegalPage,
+    BlogPost, BlogCategory,
 )
 
 
@@ -114,3 +115,41 @@ class ClientLogoAdmin(admin.ModelAdmin):
 class LegalPageAdmin(admin.ModelAdmin):
     list_display = ['page', 'title', 'last_updated']
     fields = ['page', 'title', 'content']
+
+
+@admin.register(BlogCategory)
+class BlogCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'name_de', 'slug']
+    prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ['title', 'category', 'post_type', 'is_published', 'published_at', 'cover_preview']
+    list_filter = ['is_published', 'post_type', 'category']
+    list_editable = ['is_published']
+    search_fields = ['title', 'title_de', 'body']
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ['created_at', 'updated_at']
+
+    fieldsets = (
+        ('Content — English', {
+            'fields': ('title', 'slug', 'post_type', 'category', 'excerpt', 'body', 'cover_image', 'video_url')
+        }),
+        ('Content — Deutsch', {
+            'fields': ('title_de', 'excerpt_de', 'body_de'),
+            'classes': ('collapse',),
+        }),
+        ('SEO', {
+            'fields': ('meta_title', 'meta_description'),
+        }),
+        ('Publishing', {
+            'fields': ('is_published', 'published_at', 'created_at', 'updated_at'),
+        }),
+    )
+
+    @admin.display(description='Cover')
+    def cover_preview(self, obj):
+        if obj.cover_image:
+            return format_html('<img src="{}" style="height:40px;border-radius:4px;" />', obj.cover_image.url)
+        return '—'
