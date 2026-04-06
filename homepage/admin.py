@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from .models import (
     ContactSubmission, QuoteRequest,
     SiteSettings, Service, HowItWorksStep, ClientLogo, LegalPage,
-    BlogPost, BlogCategory,
+    BlogPost, BlogCategory, BlogPostImage,
 )
 
 
@@ -123,6 +123,23 @@ class BlogCategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
+class BlogPostImageInline(admin.TabularInline):
+    model = BlogPostImage
+    extra = 3
+    fields = ['image', 'caption', 'order', 'image_preview']
+    readonly_fields = ['image_preview']
+
+    @admin.display(description='Preview')
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="height:60px;border-radius:4px;" />'
+                '<br><small style="color:#999;font-size:10px;word-break:break-all;">{}</small>',
+                obj.image.url, obj.image.url
+            )
+        return '—'
+
+
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
     list_display = ['title', 'category', 'post_type', 'is_published', 'published_at', 'cover_preview']
@@ -131,6 +148,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     search_fields = ['title', 'title_de', 'body']
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ['created_at', 'updated_at']
+    inlines = [BlogPostImageInline]
 
     fieldsets = (
         ('Content — English', {
