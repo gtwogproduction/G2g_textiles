@@ -28,24 +28,26 @@
   <!-- NAV -->
   <nav class="nav">
     <a href="{% url 'homepage' %}" class="nav__logo">G2G <span>Textiles</span></a>
+    
     <ul class="nav__links">
       <li><a href="#services">{% trans "Services" %}</a></li>
       <li><a href="#how-it-works">{% trans "How It Works" %}</a></li>
       <li><a href="{% url 'blog_list' %}">Blog</a></li>
       <li><a href="{% url 'contact' %}" class="nav__cta">{% trans "Contact Us" %}</a></li>
-      <li>
-        {% get_current_language as CURRENT_LANG %}
-        <div class="lang-switcher">
-          {% if CURRENT_LANG == 'en' %}
-            <span class="lang-btn lang-btn--active">EN</span>
-            <a href="/de/" class="lang-btn">DE</a>
-          {% else %}
-            <a href="/en/" class="lang-btn">EN</a>
-            <span class="lang-btn lang-btn--active">DE</span>
-          {% endif %}
-        </div>
-      </li>
     </ul>
+
+    <!-- Moved outside nav__links so it's always visible -->
+    {% get_current_language as CURRENT_LANG %}
+    <div class="lang-switcher">
+      {% if CURRENT_LANG == 'en' %}
+        <span class="lang-btn lang-btn--active">EN</span>
+        <a href="/de/" class="lang-btn">DE</a>
+      {% else %}
+        <a href="/en/" class="lang-btn">EN</a>
+        <span class="lang-btn lang-btn--active">DE</span>
+      {% endif %}
+    </div>
+
     <button class="nav__burger" aria-label="Toggle menu">&#9776;</button>
   </nav>
 
