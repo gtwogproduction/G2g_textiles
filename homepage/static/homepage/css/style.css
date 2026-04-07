@@ -628,4 +628,20 @@ img { max-width: 100%; display: block; }
   .form-row { grid-template-columns: 1fr; }
   .step { gap: 1.5rem; }
   .step__number { font-size: 2.5rem; min-width: 56px; }
+
+  .clients__label {
+    display: none;
+  }
+
+  .clients__inner {
+    gap: 0;
+  }
+
+  .clients__track-wrap {
+    width: 100%;
+  }
+
+  .clients__logo img {
+    height: 28px;
+  }
 }
