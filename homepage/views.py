@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from .forms import (
     ContactForm,
     QuoteStep1Form, QuoteStep2Form, QuoteStep3Form,
@@ -9,11 +10,11 @@ from .forms import (
 from .models import ContactSubmission, QuoteRequest
 
 QUOTE_STEPS = [
-    ('about',   'About You',            QuoteStep1Form),
-    ('order',   'The Order',            QuoteStep2Form),
-    ('custom',  'Customisation',        QuoteStep3Form),
-    ('country', 'Production Country',   QuoteStep4Form),
-    ('extras',  'Special Requirements', QuoteStep5Form),
+    ('about',   _l('About You'),            QuoteStep1Form),
+    ('order',   _l('The Order'),            QuoteStep2Form),
+    ('custom',  _l('Customisation'),        QuoteStep3Form),
+    ('country', _l('Production Country'),   QuoteStep4Form),
+    ('extras',  _l('Special Requirements'), QuoteStep5Form),
 ]
 
 SESSION_KEY = 'quote_data'
@@ -135,6 +136,12 @@ def quote(request, step=1):
     step_index = step - 1
     step_slug, step_title, FormClass = QUOTE_STEPS[step_index]
 
+    # Resolve lazy translation string now so template gets a plain string
+    step_title = str(step_title)
+
+    current_lang = getattr(request, 'LANGUAGE_CODE', 'en')
+    is_de = current_lang.startswith('de')
+
     if SESSION_KEY not in request.session:
         request.session[SESSION_KEY] = {}
 
@@ -165,7 +172,12 @@ def quote(request, step=1):
         form = FormClass(initial=initial)
 
     steps_meta = [
-        {'number': i + 1, 'title': s[1], 'active': i + 1 == step, 'done': i + 1 < step}
+        {
+            'number': i + 1,
+            'title': str(s[1]),  # resolve lazy string
+            'active': i + 1 == step,
+            'done': i + 1 < step,
+        }
         for i, s in enumerate(QUOTE_STEPS)
     ]
 
@@ -177,6 +189,7 @@ def quote(request, step=1):
         'step_slug': step_slug,
         'steps_meta': steps_meta,
         'progress': round((step / total_steps) * 100),
+        'is_de': is_de,
     })
 
 
@@ -319,6 +332,7 @@ def create_super(request):
         return HttpResponse('Superuser created - delete this view now!')
     return HttpResponse('Already exists')
 
+
 def migration_status(request):
     from django.http import HttpResponse
     from django.db import connection
@@ -333,6 +347,7 @@ def migration_status(request):
     db_columns = [r[0] for r in cursor.fetchall()]
     result = f"MIGRATIONS:\n{migrations}\n\nMODEL DE FIELDS:\n{chr(10).join(de_fields) or 'NONE'}\n\nDB COLUMNS:\n{chr(10).join(db_columns) or 'NONE'}"
     return HttpResponse(result, content_type='text/plain')
+
 
 def blog_list(request):
     from .models import BlogPost, BlogCategory
