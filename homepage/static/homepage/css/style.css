@@ -563,18 +563,27 @@ img { max-width: 100%; display: block; }
     gap: 0.5rem;
     padding: 1rem 1.25rem;
   }
-
   .nav__logo {
     flex: 1;
   }
-
   .lang-switcher {
     flex-shrink: 0;
   }
-
   .nav__burger {
     flex-shrink: 0;
   }
+  .nav__links { display: none; }
+  .nav__links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: var(--bg);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .nav__burger { display: block; }
 
   /* Hero */
   .hero {
@@ -634,19 +643,9 @@ img { max-width: 100%; display: block; }
   .step { gap: 1.5rem; }
   .step__number { font-size: 2.5rem; min-width: 56px; }
 
-  .clients__label {
-    display: none;
-  }
-
-  .clients__inner {
-    gap: 0;
-  }
-
-  .clients__track-wrap {
-    width: 100%;
-  }
-
-  .clients__logo img {
-    height: 28px;
-  }
+  /* Clients ticker */
+  .clients__label { display: none; }
+  .clients__inner { gap: 0; }
+  .clients__track-wrap { width: 100%; }
+  .clients__logo img { height: 28px; }
 }
