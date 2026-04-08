@@ -262,3 +262,35 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== RADIO & CHECKBOX INLINE FIX ===== */
+.form-group input[type="radio"],
+.form-group input[type="checkbox"] {
+  display: inline-flex;
+  width: auto;
+  margin-right: 0.5rem;
+  accent-color: var(--navy-light);
+  cursor: pointer;
+}
+
+.form-group ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.form-group ul li {
+  display: flex;
+  align-items: center;
+}
+
+.form-group ul li label {
+  display: inline;
+  font-size: 0.85rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--white);
+  cursor: pointer;
+  font-weight: 300;
+}
