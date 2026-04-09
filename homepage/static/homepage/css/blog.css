@@ -353,12 +353,15 @@
   white-space: nowrap;
 }
 
-/* ===== FULL WIDTH POST IMAGES ===== */
+/* ===== POST IMAGES ===== */
 .post-figure {
   margin: 2rem 0;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .post-figure img {
@@ -374,6 +377,12 @@
   color: var(--muted);
   background: var(--surface);
   font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .post-figure {
+    width: 100%;
+  }
 }
 
 /* ===== BLOG CARD IMAGE — full visibility ===== */
