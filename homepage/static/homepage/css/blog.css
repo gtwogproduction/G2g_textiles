@@ -478,7 +478,7 @@
 @media (max-width: 768px) {
   .post-cta-inline {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .post-table th,
