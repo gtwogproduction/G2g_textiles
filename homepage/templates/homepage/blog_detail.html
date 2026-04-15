@@ -26,8 +26,8 @@
         </a>
       </li>
       <li>
-        <a href="{% url 'blog_list' %}?category=case-studies"
-          class="{% if request.resolver_match.url_name == 'blog_list' and request.GET.category == 'case-studies' %}active{% endif %}">
+        <a href="{% url 'blog_list' %}?category=case-study"
+          class="{% if request.resolver_match.url_name == 'blog_list' and request.GET.category == 'case-study' %}active{% endif %}">
           Projects
         </a>
       </li>
