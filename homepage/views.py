@@ -392,3 +392,19 @@ def blog_detail(request, slug):
         'post': post,
         'is_de': is_de,
     })
+
+def test_email(request):
+    from django.http import HttpResponse
+    from django.core.mail import send_mail
+    from django.conf import settings as django_settings
+    try:
+        send_mail(
+            subject='G2G Test Email',
+            message='This is a test email from G2G Textiles.',
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[django_settings.QUOTE_NOTIFICATION_EMAIL],
+            fail_silently=False,
+        )
+        return HttpResponse('Email sent successfully!')
+    except Exception as e:
+        return HttpResponse('Email failed: ' + str(e))

@@ -14,4 +14,5 @@ urlpatterns = [
     path('migration-status/', views.migration_status, name='migration_status'),
     path('blog/', views.blog_list, name='blog_list'),
     path('blog/<slug:slug>/', views.blog_detail, name='blog_detail'),
+    path('test-email/', views.test_email, name='test_email'),
 ]
