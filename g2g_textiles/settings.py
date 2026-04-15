@@ -117,11 +117,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- Email ---
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'mail.hostpoint.ch'
+EMAIL_HOST = 'smtp.resend.com'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST_USER = 'resend'
+EMAIL_HOST_PASSWORD = os.environ.get('RESEND_API_KEY', '')
 DEFAULT_FROM_EMAIL = 'G2G Textiles <production@gtwog.ch>'
 QUOTE_NOTIFICATION_EMAIL = 'production@gtwog.ch'
