@@ -21,13 +21,13 @@
       <li><a href="{% url 'homepage' %}#how-it-works">{% trans "How It Works" %}</a></li>
       <li>
         <a href="{% url 'blog_list' %}"
-          class="{% if request.resolver_match.url_name == 'blog_list' and not request.GET.category %}active{% endif %}">
+          class="{% if request.resolver_match.url_name == 'blog_list' and not active_category %}active{% endif %}">
           Editorial
         </a>
       </li>
       <li>
         <a href="{% url 'blog_list' %}?category=case-studies"
-          class="{% if request.resolver_match.url_name == 'blog_list' and request.GET.category == 'case-studies' %}active{% endif %}">
+          class="{% if request.resolver_match.url_name == 'blog_list' and active_category == 'case-studies' %}active{% endif %}">
           Projects
         </a>
       </li>
