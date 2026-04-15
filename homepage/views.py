@@ -67,10 +67,6 @@ def homepage(request):
 
     site_settings = SiteSettings.get()
     localised_settings = LocalisedSettings(site_settings, is_de)
-    if site_settings.hero_video:
-        print(f"DEBUG VIDEO URL: {site_settings.hero_video.url}")
-    else:
-        print("DEBUG VIDEO URL: no video set")
 
     services_qs = Service.objects.filter(is_active=True)
     steps_qs = HowItWorksStep.objects.filter(is_active=True)
@@ -101,6 +97,7 @@ def homepage(request):
         'services': services,
         'steps': steps,
         'clients': clients,
+        'is_de': is_de,
     }
     return render(request, 'homepage/index.html', context)
 
@@ -110,12 +107,15 @@ def contact(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
-            form.save()
+            try:
+                form.save()
+            except Exception as e:
+                print("Contact form save failed: " + str(e))
             messages.success(request, _("Thanks! We'll be in touch within 48 hours."))
             return redirect('contact')
     else:
         form = ContactForm()
-    site_settings = SiteSettings.objects.get(pk=1)
+    site_settings = SiteSettings.get()
     return render(request, 'homepage/contact.html', {'form': form, 'site_settings': site_settings})
 
 
@@ -126,7 +126,7 @@ def legal_page(request, page):
     except LegalPage.DoesNotExist:
         from django.http import Http404
         raise Http404
-    site_settings = SiteSettings.objects.get(pk=1)
+    site_settings = SiteSettings.get()
     return render(request, 'homepage/legal.html', {'legal': legal, 'site_settings': site_settings})
 
 
@@ -136,7 +136,6 @@ def quote(request, step=1):
     step_index = step - 1
     step_slug, step_title, FormClass = QUOTE_STEPS[step_index]
 
-    # Resolve lazy translation string now so template gets a plain string
     step_title = str(step_title)
 
     current_lang = getattr(request, 'LANGUAGE_CODE', 'en')
@@ -174,7 +173,7 @@ def quote(request, step=1):
     steps_meta = [
         {
             'number': i + 1,
-            'title': str(s[1]),  # resolve lazy string
+            'title': str(s[1]),
             'active': i + 1 == step,
             'done': i + 1 < step,
         }
@@ -301,8 +300,15 @@ def _submit_quote(request):
         quote_obj = QuoteRequest.objects.create(**clean)
         del request.session[SESSION_KEY]
 
-        _send_internal_notification(quote_obj)
-        _send_customer_confirmation(quote_obj)
+        try:
+            _send_internal_notification(quote_obj)
+        except Exception as e:
+            print("Internal notification failed: " + str(e))
+
+        try:
+            _send_customer_confirmation(quote_obj)
+        except Exception as e:
+            print("Customer confirmation failed: " + str(e))
 
         return redirect('quote_success')
     except Exception as e:
@@ -327,10 +333,21 @@ def translation_test(request):
 def create_super(request):
     from django.http import HttpResponse
     from django.contrib.auth.models import User
-    if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'production@gtwog.ch', 'changeme123')
-        return HttpResponse('Superuser created - delete this view now!')
-    return HttpResponse('Already exists')
+    import os
+    username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
+    email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
+    password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', '')
+    if not password:
+        return HttpResponse('No password set in environment variables')
+    if User.objects.filter(username=username).exists():
+        u = User.objects.get(username=username)
+        u.set_password(password)
+        u.is_superuser = True
+        u.is_staff = True
+        u.save()
+        return HttpResponse('Password reset successfully')
+    User.objects.create_superuser(username, email, password)
+    return HttpResponse('Superuser created successfully')
 
 
 def migration_status(request):
