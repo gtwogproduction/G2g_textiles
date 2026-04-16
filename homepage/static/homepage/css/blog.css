@@ -120,7 +120,7 @@
   border-radius: 20px;
 }
 
-.blog-card__type--article { background: rgba(30, 79, 216, 0.1); color: var(--navy-light); }
+.blog-card__type--article { background: rgba(0, 0, 0, 0.07); color: #1a1a1a; }
 .blog-card__type--case_study { background: rgba(40, 120, 80, 0.1); color: #2a7850; }
 .blog-card__type--video { background: rgba(160, 60, 60, 0.1); color: #a03c3c; }
 
@@ -259,7 +259,7 @@
   border-left: 3px solid var(--navy-light);
   padding: 0.75rem 1.5rem;
   margin: 1.5rem 0;
-  background: rgba(30, 79, 216, 0.05);
+  background: rgba(0, 0, 0, 0.03);
   color: var(--muted);
   font-style: italic;
 }

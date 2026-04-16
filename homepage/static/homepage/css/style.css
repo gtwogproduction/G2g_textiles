@@ -3,9 +3,9 @@
   --bg: #f5f2ee;
   --bg-alt: #edeae4;
   --surface: #ffffff;
-  --navy: #1a3a6e;
-  --navy-light: #1e4fd8;
-  --navy-glow: rgba(30, 79, 216, 0.15);
+  --navy: #1a1a1a;
+  --navy-light: #1a1a1a;
+  --navy-glow: rgba(0, 0, 0, 0.08);
   --white: #1a1a1a;
   --muted: #6b6760;
   --border: rgba(0,0,0,0.1);
@@ -132,9 +132,7 @@ img { max-width: 100%; display: block; }
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 60% 60% at 80% 40%, rgba(30, 79, 216, 0.07) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 10% 80%, rgba(30, 79, 216, 0.04) 0%, transparent 70%);
+  background: none;
   pointer-events: none;
   z-index: 1;
 }
@@ -490,7 +488,7 @@ img { max-width: 100%; display: block; }
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
   border-left: 3px solid var(--navy-light);
-  background: rgba(30, 79, 216, 0.08);
+  background: rgba(0, 0, 0, 0.05);
   color: var(--white);
 }
 
