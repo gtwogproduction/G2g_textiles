@@ -122,7 +122,14 @@
             <div class="form-grid">
               <div class="form-group form-group--full">
                 <label>{% trans "What products do you need?" %} <span class="req">*</span></label>
-                <div class="checkbox-grid">{{ form.product_types }}</div>
+                <div class="checkbox-grid">
+                  {% for choice in form.product_types %}
+                  <label class="checkbox-tag {% if choice.data.value in form.product_types.value %}checked{% endif %}">
+                    {{ choice.tag }}
+                    <span>{{ choice.choice_label }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
                 {% if form.product_types.errors %}<span class="form-error">{{ form.product_types.errors.0 }}</span>{% endif %}
               </div>
               <div class="form-group form-group--full" id="productOtherWrap" style="display:none">

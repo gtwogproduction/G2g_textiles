@@ -345,51 +345,52 @@
   font-weight: 500 !important;
 }
 
-/* ===== CHECKBOX GRID — 3 column tag grid ===== */
-.checkbox-grid ul {
+/* ===== CHECKBOX GRID — tag tiles ===== */
+.checkbox-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.4rem;
 }
 
-.checkbox-grid ul li label {
+.checkbox-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   padding: 0.6rem 0.75rem;
   background: #fff;
   border: 1px solid rgba(0,0,0,0.1);
   border-radius: var(--radius);
-  font-size: 0.82rem !important;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: #1a1a1a;
+  transition: border-color 0.18s, background 0.18s, color 0.18s;
+  user-select: none;
 }
 
-.checkbox-grid ul li label:hover { border-color: var(--navy-light); }
+.checkbox-tag input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  accent-color: var(--navy-light);
+  cursor: pointer;
+  margin: 0;
+}
 
-.checkbox-grid ul li label:has(input:checked) {
+.checkbox-tag:hover { border-color: var(--navy-light); }
+
+.checkbox-tag:has(input:checked) {
   border-color: var(--navy-light);
   background: rgba(30,79,216,0.06);
-  color: var(--navy-light) !important;
-  font-weight: 500 !important;
+  color: var(--navy-light);
+  font-weight: 500;
 }
 
-/* ===== CHECKBOX SINGLE ===== */
-.checkbox-single {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center;
-  gap: 0.65rem;
+@media (max-width: 860px) {
+  .checkbox-grid { grid-template-columns: 1fr 1fr; }
 }
-.checkbox-single input[type="checkbox"] {
-  width: 15px !important;
-  height: 15px !important;
-  accent-color: var(--navy-light);
-  flex-shrink: 0;
-  cursor: pointer;
-}
-.checkbox-single label {
-  font-size: 0.88rem !important;
-  text-transform: none !important;
-  letter-spacing: 0 !important;
-  color: #1a1a1a !important;
-  font-weight: 400 !important;
-  cursor: pointer;
+@media (max-width: 400px) {
+  .checkbox-grid { grid-template-columns: 1fr; }
 }
 
 /* ===== COUNTRY CARDS ===== */
