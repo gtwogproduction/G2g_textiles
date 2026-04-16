@@ -320,52 +320,6 @@ def quote_success(request):
     return render(request, 'homepage/quote_success.html')
 
 
-def translation_test(request):
-    from django.http import HttpResponse
-    from django.utils.translation import gettext as _
-    import os
-    locale_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locale', 'de', 'LC_MESSAGES')
-    files = os.listdir(locale_path) if os.path.exists(locale_path) else ['NOT FOUND']
-    result = f"Files: {files} | Services in DE: {_('Services')} | LANG: {request.LANGUAGE_CODE}"
-    return HttpResponse(result)
-
-
-def create_super(request):
-    from django.http import HttpResponse
-    from django.contrib.auth.models import User
-    import os
-    username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
-    email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
-    password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', '')
-    if not password:
-        return HttpResponse('No password set in environment variables')
-    if User.objects.filter(username=username).exists():
-        u = User.objects.get(username=username)
-        u.set_password(password)
-        u.is_superuser = True
-        u.is_staff = True
-        u.save()
-        return HttpResponse('Password reset successfully')
-    User.objects.create_superuser(username, email, password)
-    return HttpResponse('Superuser created successfully')
-
-
-def migration_status(request):
-    from django.http import HttpResponse
-    from django.db import connection
-    from homepage.models import SiteSettings
-    cursor = connection.cursor()
-    cursor.execute("SELECT app, name FROM django_migrations WHERE app='homepage' ORDER BY name")
-    rows = cursor.fetchall()
-    migrations = "\n".join([f"{r[0]} - {r[1]}" for r in rows])
-    all_fields = [f.name for f in SiteSettings._meta.get_fields()]
-    de_fields = [f for f in all_fields if '_de' in f]
-    cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='homepage_sitesettings' AND column_name LIKE '%_de%'")
-    db_columns = [r[0] for r in cursor.fetchall()]
-    result = f"MIGRATIONS:\n{migrations}\n\nMODEL DE FIELDS:\n{chr(10).join(de_fields) or 'NONE'}\n\nDB COLUMNS:\n{chr(10).join(db_columns) or 'NONE'}"
-    return HttpResponse(result, content_type='text/plain')
-
-
 def blog_list(request):
     from .models import BlogPost, BlogCategory
     category_slug = request.GET.get('category', '')
@@ -392,19 +346,3 @@ def blog_detail(request, slug):
         'post': post,
         'is_de': is_de,
     })
-
-def test_email(request):
-    from django.http import HttpResponse
-    from django.core.mail import send_mail
-    from django.conf import settings as django_settings
-    try:
-        send_mail(
-            subject='G2G Test Email',
-            message='This is a test email from G2G Textiles.',
-            from_email=django_settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[django_settings.QUOTE_NOTIFICATION_EMAIL],
-            fail_silently=False,
-        )
-        return HttpResponse('Email sent successfully!')
-    except Exception as e:
-        return HttpResponse('Email failed: ' + str(e))
