@@ -71,6 +71,15 @@
   margin: 0;
 }
 
+.sidebar__email-link {
+  color: var(--navy-light);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.2s;
+}
+.sidebar__email-link:hover { opacity: 0.75; }
+.sidebar__email-link strong { font-weight: 500; }
+
 /* ===== FORM PANEL ===== */
 .contact-panel { 
   background: var(--bg); 
