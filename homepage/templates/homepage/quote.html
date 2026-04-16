@@ -21,21 +21,21 @@
   <link rel="stylesheet" href="{% static 'homepage/css/quote.css' %}" />
 </head>
 <body class="quote-page">
- 
+
   <nav class="nav">
     <a href="{% url 'homepage' %}" class="nav__logo">G2G <span>Textiles</span></a>
     <a href="{% url 'homepage' %}" class="nav__back">← {% trans "Back to Home" %}</a>
   </nav>
- 
+
   <main class="quote-main">
- 
+
     <!-- Sidebar -->
     <aside class="quote-sidebar">
       <div class="quote-sidebar__inner">
         <p class="sidebar__eyebrow">{% trans "Quote Request" %}</p>
         <h1 class="sidebar__title">{% trans "Let's build" %}<br/><em>{% trans "your order." %}</em></h1>
         <p class="sidebar__sub">{% trans "Takes around 5 minutes. We'll use your answers to prepare a tailored quote within 48 hours." %}</p>
- 
+
         <nav class="step-nav">
           {% for s in steps_meta %}
           <div class="step-nav__item {% if s.active %}active{% elif s.done %}done{% endif %}">
@@ -46,143 +46,168 @@
           </div>
           {% endfor %}
         </nav>
- 
+
         <div class="sidebar__footer">
           <p>{% trans "Questions? Email us at" %}<br/><a href="mailto:production@gtwog.ch">production@gtwog.ch</a></p>
         </div>
       </div>
     </aside>
- 
+
     <!-- Form panel -->
     <section class="quote-panel">
       <div class="quote-panel__inner">
- 
+
         <!-- Progress bar -->
         <div class="progress-bar">
           <div class="progress-bar__fill" style="width: {{ progress }}%"></div>
         </div>
         <p class="progress-label">{% trans "Step" %} {{ step }} {% trans "of" %} {{ total_steps }}</p>
- 
+
         <h2 class="panel__title">{{ step_title }}</h2>
- 
+
         {% if messages %}
           {% for message in messages %}
           <div class="alert">{{ message }}</div>
           {% endfor %}
         {% endif %}
- 
+
         <form method="POST" class="quote-form" id="quoteForm">
           {% csrf_token %}
- 
+
           {% if step_slug == 'about' %}
             <div class="form-grid">
               <div class="form-group form-group--full">
-                <label>{% trans "Are you ordering as a" %} <span class="req">*</span></label>
-                <div class="radio-cards">{{ form.client_type }}</div>
+                <label class="form-label">{% trans "Are you ordering as a" %} <span class="req">*</span></label>
+                <div class="radio-pills">
+                  {% for choice in form.client_type %}
+                  <label class="radio-pill">
+                    {{ choice.tag }}<span>{{ choice.choice_label }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
               </div>
               <div class="form-group form-group--full" id="companyField">
-                <label>{% trans "Company / Organisation" %} <span class="req">*</span></label>
+                <label class="form-label">{% trans "Company / Organisation" %} <span class="req">*</span></label>
                 {{ form.company_name }}
                 {% if form.company_name.errors %}<span class="form-error">{{ form.company_name.errors.0 }}</span>{% endif %}
               </div>
               <div class="form-group form-group--full" id="industryField">
-                <label>{% trans "Industry" %} <span class="req">*</span></label>
+                <label class="form-label">{% trans "Industry" %} <span class="req">*</span></label>
                 {{ form.industry }}
                 {% if form.industry.errors %}<span class="form-error">{{ form.industry.errors.0 }}</span>{% endif %}
               </div>
               <div class="form-group form-group--full" id="industryOtherWrap" style="display:none">
-                <label>{% trans "Please specify your industry" %}</label>
+                <label class="form-label">{% trans "Please specify your industry" %}</label>
                 {{ form.industry_other }}
               </div>
               <div class="form-group">
-                <label>{% trans "Your Name" %} <span class="req">*</span></label>
+                <label class="form-label">{% trans "Your Name" %} <span class="req">*</span></label>
                 {{ form.contact_name }}
                 {% if form.contact_name.errors %}<span class="form-error">{{ form.contact_name.errors.0 }}</span>{% endif %}
               </div>
               <div class="form-group">
-                <label>{% trans "Your Role" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "Your Role" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.role }}
               </div>
               <div class="form-group">
-                <label>{% trans "Email Address" %} <span class="req">*</span></label>
+                <label class="form-label">{% trans "Email Address" %} <span class="req">*</span></label>
                 {{ form.email }}
                 {% if form.email.errors %}<span class="form-error">{{ form.email.errors.0 }}</span>{% endif %}
               </div>
               <div class="form-group">
-                <label>{% trans "Phone" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "Phone" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.phone }}
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "Website" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "Website" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.website }}
               </div>
             </div>
- 
+
           {% elif step_slug == 'order' %}
             <div class="form-grid">
               <div class="form-group form-group--full">
-                <label>{% trans "What products do you need?" %} <span class="req">*</span></label>
+                <label class="form-label">{% trans "What products do you need?" %} <span class="req">*</span></label>
                 <div class="checkbox-grid">
                   {% for choice in form.product_types %}
-                  <label class="checkbox-tag {% if choice.data.value in form.product_types.value %}checked{% endif %}">
-                    {{ choice.tag }}
-                    <span>{{ choice.choice_label }}</span>
+                  <label class="checkbox-tag">
+                    {{ choice.tag }}<span>{{ choice.choice_label }}</span>
                   </label>
                   {% endfor %}
                 </div>
                 {% if form.product_types.errors %}<span class="form-error">{{ form.product_types.errors.0 }}</span>{% endif %}
               </div>
               <div class="form-group form-group--full" id="productOtherWrap" style="display:none">
-                <label>{% trans "Describe the other product" %}</label>
+                <label class="form-label">{% trans "Describe the other product" %}</label>
                 {{ form.product_other }}
               </div>
               <div class="form-group">
-                <label>{% trans "Number of different styles / designs" %} <span class="req">*</span></label>
+                <label class="form-label">{% trans "Number of different styles / designs" %} <span class="req">*</span></label>
                 {{ form.num_styles }}
                 <p class="field-hint">{% trans "e.g. 2 if you need a home kit and an away kit" %}</p>
               </div>
               <div class="form-group">
-                <label>{% trans "Quantity per style" %} <span class="req">*</span></label>
+                <label class="form-label">{% trans "Quantity per style" %} <span class="req">*</span></label>
                 {{ form.quantity_per_style }}
               </div>
             </div>
- 
+
           {% elif step_slug == 'custom' %}
             <div class="form-grid">
               <div class="form-group form-group--full">
-                <label>{% trans "Brand / Garment Colours" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "Brand / Garment Colours" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.brand_colours }}
                 <p class="field-hint">{% trans "Hex codes preferred, e.g. #1B3A6B (Navy), #FFFFFF (White)" %}</p>
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "Preferred print / decoration method" %} <span class="req">*</span></label>
-                <div class="radio-list">{{ form.print_method }}</div>
+                <label class="form-label">{% trans "Preferred print / decoration method" %} <span class="req">*</span></label>
+                <div class="radio-rows">
+                  {% for choice in form.print_method %}
+                  <label class="radio-row">
+                    {{ choice.tag }}<span>{{ choice.choice_label }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "Number of print / decoration positions" %} <span class="req">*</span></label>
-                <div class="radio-cards">{{ form.print_positions }}</div>
+                <label class="form-label">{% trans "Number of print / decoration positions" %} <span class="req">*</span></label>
+                <div class="radio-pills">
+                  {% for choice in form.print_positions %}
+                  <label class="radio-pill">
+                    {{ choice.tag }}<span>{{ choice.choice_label }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "Design file status" %} <span class="req">*</span></label>
-                <div class="radio-list">{{ form.design_files_status }}</div>
+                <label class="form-label">{% trans "Design file status" %} <span class="req">*</span></label>
+                <div class="radio-rows">
+                  {% for choice in form.design_files_status %}
+                  <label class="radio-row">
+                    {{ choice.tag }}<span>{{ choice.choice_label }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
               </div>
               <div class="form-group form-group--full checkbox-single">
-                {{ form.has_logo }} <label for="{{ form.has_logo.id_for_label }}">{% trans "We have an existing logo" %}</label>
+                {{ form.has_logo }}
+                <label for="{{ form.has_logo.id_for_label }}">{% trans "We have an existing logo" %}</label>
               </div>
               <div class="form-group form-group--full checkbox-single">
-                {{ form.pantone_matching }} <label for="{{ form.pantone_matching.id_for_label }}">{% trans "Pantone / exact colour matching required" %}</label>
+                {{ form.pantone_matching }}
+                <label for="{{ form.pantone_matching.id_for_label }}">{% trans "Pantone / exact colour matching required" %}</label>
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "Additional customisation notes" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "Additional customisation notes" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.customisation_notes }}
                 <p class="field-hint">{% trans "Special labels, packaging, finishing details, etc." %}</p>
               </div>
             </div>
- 
+
           {% elif step_slug == 'country' %}
             <div class="form-grid">
               <div class="form-group form-group--full">
-                <p class="field-hint" style="font-size:0.92rem; line-height:1.7; margin-bottom: 1rem;">
+                <p class="field-hint" style="font-size:0.9rem; line-height:1.7; margin-bottom: 1rem;">
                   {% trans "We work with trusted manufacturers in three main regions. Select your preference and we'll recommend the best fit based on your brief, budget and timeline." %}
                 </p>
                 <div class="country-cards">
@@ -225,19 +250,25 @@
                 </div>
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "Additional notes on production location" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "Additional notes on production location" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.production_notes }}
               </div>
             </div>
- 
+
           {% elif step_slug == 'extras' %}
             <div class="form-grid">
               <div class="form-group form-group--full">
-                <label>{% trans "Sustainability requirements" %} <span class="req">*</span></label>
-                <div class="radio-list">{{ form.sustainability }}</div>
+                <label class="form-label">{% trans "Sustainability requirements" %} <span class="req">*</span></label>
+                <div class="radio-rows">
+                  {% for choice in form.sustainability %}
+                  <label class="radio-row">
+                    {{ choice.tag }}<span>{{ choice.choice_label }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "Certifications needed" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "Certifications needed" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.certifications_needed }}
                 <p class="field-hint">{% trans "e.g. OEKO-TEX, GOTS, Fair Trade" %}</p>
               </div>
@@ -246,27 +277,27 @@
                 <label for="{{ form.existing_supplier.id_for_label }}">{% trans "We currently work with another supplier" %}</label>
               </div>
               <div class="form-group form-group--full" id="existingSupplierWrap" style="display:none">
-                <label>{% trans "What are you looking to improve?" %}</label>
+                <label class="form-label">{% trans "What are you looking to improve?" %}</label>
                 {{ form.existing_supplier_notes }}
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "How did you hear about G2G?" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "How did you hear about G2G?" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.heard_about_us }}
               </div>
               <div class="form-group form-group--full">
-                <label>{% trans "Anything else we should know?" %} <span class="optional">({% trans "optional" %})</span></label>
+                <label class="form-label">{% trans "Anything else we should know?" %} <span class="optional">({% trans "optional" %})</span></label>
                 {{ form.additional_notes }}
               </div>
             </div>
           {% endif %}
- 
+
           <div class="form-actions">
             {% if step > 1 %}
             <a href="{% url 'quote_step' step=step|add:'-1' %}" class="btn btn--ghost">← {% trans "Back" %}</a>
             {% else %}
             <span></span>
             {% endif %}
- 
+
             {% if step < total_steps %}
             <button type="submit" class="btn btn--primary">{% trans "Continue" %} →</button>
             {% else %}
@@ -274,11 +305,11 @@
             {% endif %}
           </div>
         </form>
- 
+
       </div>
     </section>
   </main>
- 
+
   <script src="{% static 'homepage/js/quote.js' %}"></script>
 </body>
 </html>
