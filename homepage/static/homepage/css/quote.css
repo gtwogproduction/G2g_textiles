@@ -196,13 +196,14 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.4rem;
+  row-gap: 1.75rem;
 }
 .form-group--full { grid-column: 1 / -1; }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 .form-group > label {
   font-size: 0.7rem;
@@ -215,8 +216,9 @@
 .field-hint {
   font-size: 0.76rem;
   color: var(--muted);
-  margin-top: 0.2rem;
   line-height: 1.55;
+  margin-top: 0.3rem;
+  margin-bottom: 0;
 }
 
 /* ===== INPUTS ===== */
@@ -497,4 +499,9 @@
 @media (max-width: 400px) {
   .checkbox-grid { grid-template-columns: 1fr; }
   .radio-pills { flex-direction: column; }
+}
+
+.form-actions {
+  margin-top: 3rem;
+  padding-top: 1.75rem;
 }

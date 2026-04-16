@@ -167,7 +167,8 @@
   outline: none;
   width: 100%;
   transition: border-color 0.2s, background 0.2s;
-  -webkit-appearance: none;
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
 }
 .contact-form input:focus,
 .contact-form textarea:focus,
