@@ -649,3 +649,37 @@ img { max-width: 100%; display: block; }
   .clients__track-wrap { width: 100%; }
   .clients__logo img { height: 28px; }
 }
+
+/* ===== HERO TRUST STRIP ===== */
+.hero__trust {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.hero__trust-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: rgba(0,0,0,0.55);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.hero__trust-item svg {
+  color: var(--navy-light);
+  flex-shrink: 0;
+}
+
+.hero__trust-sep {
+  color: rgba(0,0,0,0.25);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 600px) {
+  .hero__trust { gap: 0.5rem; }
+  .hero__trust-sep { display: none; }
+}

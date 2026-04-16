@@ -452,11 +452,18 @@
   text-transform: none !important;
   letter-spacing: 0 !important;
 }
+
 .country-card__label input[type="checkbox"] {
-  accent-color: var(--navy-light);
-  width: 14px !important;
-  height: 14px !important;
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  opacity: 1 !important;
+  position: static !important;
+  pointer-events: auto !important;
+  width: 15px !important;
+  height: 15px !important;
   margin: 0 !important;
+  accent-color: var(--navy-light);
+  cursor: pointer;
 }
 
 .country-card__desc {
