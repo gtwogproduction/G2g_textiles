@@ -425,7 +425,7 @@ def portal_login(request):
 
 def portal_logout(request):
     auth_logout(request)
-    return redirect('homepage')
+    return redirect('portal_login')
 
 
 @login_required
