@@ -153,19 +153,36 @@
 
 <script>
 (function () {
-  var totalForms = document.getElementById('id_form-TOTAL_FORMS');
-  var tbody = document.getElementById('line-item-body');
-  var grandTotalEl = document.getElementById('grand-total');
+  var tbody      = document.getElementById('line-item-body');
+  var grandTotal = document.getElementById('grand-total');
+  var addBtn     = document.getElementById('add-line-btn');
+
+  if (!tbody || !addBtn) return;  // elements not in DOM — bail silently
+
+  // Management form total — look it up fresh each time so late-binding works
+  function getTotalForms() {
+    var el = document.getElementById('id_form-TOTAL_FORMS');
+    return el ? (parseInt(el.value, 10) || 0) : tbody.querySelectorAll('.line-item-row').length;
+  }
+  function setTotalForms(n) {
+    var el = document.getElementById('id_form-TOTAL_FORMS');
+    if (el) el.value = n;
+  }
 
   function currencyLabel() {
     var sel = document.getElementById('id_currency');
     return (sel && sel.value) ? sel.value : 'CHF';
   }
 
+  // Null-safe row subtotal — returns 0 if any input is missing
   function rowSubtotal(row) {
-    var qty   = parseFloat(row.querySelector('[data-calc="qty"]').value)   || 0;
-    var price = parseFloat(row.querySelector('[data-calc="price"]').value) || 0;
-    var disc  = parseFloat(row.querySelector('[data-calc="disc"]').value)  || 0;
+    var qEl = row.querySelector('[data-calc="qty"]');
+    var pEl = row.querySelector('[data-calc="price"]');
+    var dEl = row.querySelector('[data-calc="disc"]');
+    if (!qEl || !pEl || !dEl) return 0;
+    var qty   = parseFloat(qEl.value)   || 0;
+    var price = parseFloat(pEl.value)   || 0;
+    var disc  = parseFloat(dEl.value)   || 0;
     return qty * price * (1 - disc / 100);
   }
 
@@ -176,41 +193,36 @@
   function recalc() {
     var total = 0;
     tbody.querySelectorAll('.line-item-row').forEach(function (row) {
-      var deleteChk = row.querySelector('input[type="checkbox"]');
-      if (deleteChk && deleteChk.checked) {
-        row.querySelector('.row-subtotal').textContent = '—';
-        return;
-      }
+      var subEl = row.querySelector('.row-subtotal');
+      if (!subEl) return;
+      var chk = row.querySelector('input[type="checkbox"]');
+      if (chk && chk.checked) { subEl.textContent = '—'; return; }
       var sub = rowSubtotal(row);
       total += sub;
-      row.querySelector('.row-subtotal').textContent = fmt(sub);
+      subEl.textContent = fmt(sub);
     });
-    grandTotalEl.textContent = fmt(total);
+    if (grandTotal) grandTotal.textContent = fmt(total);
   }
 
   tbody.addEventListener('input', recalc);
-  recalc();
 
   // ── Add Line ──
-  document.getElementById('add-line-btn').addEventListener('click', function () {
-    var idx = parseInt(totalForms.value);
-
-    // Build a fresh row from scratch instead of cloning (avoids stale pk values)
-    var tr = document.createElement('tr');
+  addBtn.addEventListener('click', function () {
+    var idx    = getTotalForms();
+    var prefix = 'form-' + idx + '-';
+    var tr     = document.createElement('tr');
     tr.className = 'line-item-row';
     tr.setAttribute('data-index', idx);
-
-    var prefix = 'form-' + idx + '-';
 
     tr.innerHTML =
       '<td class="li-description">' +
         '<input type="hidden" name="' + prefix + 'id" value="">' +
         '<input type="hidden" name="' + prefix + 'order" value="' + idx + '">' +
-        '<input type="text"   name="' + prefix + 'description" class="li-description" placeholder="">' +
+        '<input type="text" name="' + prefix + 'description" placeholder="">' +
       '</td>' +
-      '<td><input type="number" name="' + prefix + 'quantity"    value="1"    min="1"  class="li-qty"      data-calc="qty"></td>' +
-      '<td><input type="number" name="' + prefix + 'unit_price"  value="0.00" min="0"  step="0.01" class="li-price"   data-calc="price"></td>' +
-      '<td><input type="number" name="' + prefix + 'discount_pct" value="0"  min="0"  max="100" step="0.01" class="li-discount" data-calc="disc"></td>' +
+      '<td><input type="number" name="' + prefix + 'quantity" value="1" min="1" class="li-qty" data-calc="qty"></td>' +
+      '<td><input type="number" name="' + prefix + 'unit_price" value="0.00" min="0" step="0.01" class="li-price" data-calc="price"></td>' +
+      '<td><input type="number" name="' + prefix + 'discount_pct" value="0" min="0" max="100" step="0.01" class="li-discount" data-calc="disc"></td>' +
       '<td class="li-subtotal"><span class="row-subtotal">—</span></td>' +
       '<td class="li-delete">' +
         '<label style="display:none"><input type="checkbox" name="' + prefix + 'DELETE"></label>' +
@@ -218,13 +230,16 @@
       '</td>';
 
     tbody.appendChild(tr);
-    totalForms.value = idx + 1;
+    setTotalForms(idx + 1);
     recalc();
+    var descInput = tr.querySelector('input[type="text"]');
+    if (descInput) descInput.focus();
   });
 
   // ── Remove Line ──
   window.removeLine = function (btn) {
     var row = btn.closest('.line-item-row');
+    if (!row) return;
     var chk = row.querySelector('input[type="checkbox"]');
     if (chk) {
       chk.checked = true;
@@ -237,7 +252,10 @@
   };
 
   var currSel = document.getElementById('id_currency');
-  if (currSel) { currSel.addEventListener('change', recalc); }
+  if (currSel) currSel.addEventListener('change', recalc);
+
+  // Run recalc last — after all listeners are wired up
+  recalc();
 })();
 </script>
 {% endblock %}
