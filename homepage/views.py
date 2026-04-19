@@ -367,6 +367,8 @@ def _is_factory_user(user):
 def _send_status_notification(quote, update):
     if not quote.customer or not quote.customer.email:
         return
+    if not quote.notify_on_updates:
+        return
     from django.core.mail import send_mail
     from django.conf import settings as django_settings
 
@@ -374,32 +376,40 @@ def _send_status_notification(quote, update):
         quote.customer.first_name
         or (quote.contact_name.split()[0] if quote.contact_name else 'there')
     )
+    order_name = quote.company_name or quote.contact_name
+    portal_url = "https://gtwog.ch/en/portal/customer/" + str(quote.pk) + "/"
     subject = f"Order Update: {update.get_status_display()} — G2G Textiles"
-    lines = [
-        f"Hi {first_name},",
-        "",
-        f"There is a new update on your order for {quote.company_name or quote.contact_name}.",
-        "",
-        f"Status: {update.get_status_display()}",
-        f"Date:   {update.created_at.strftime('%d %b %Y')}",
-    ]
-    if update.note:
-        lines += ["", "Note from production:", update.note]
-    lines += [
-        "",
-        "Log in to your portal to view your full order history:",
-        "https://gtwog.ch/en/portal/customer/" + str(quote.pk) + "/",
-        "",
-        "Best regards,",
-        "The G2G Textiles Team",
-        "production@gtwog.ch",
-    ]
+
+    note_block_text = f"\nNote from production:\n{update.note}\n" if update.note else ""
+    note_block_html = f"<p><strong>Note from production:</strong><br>{update.note}</p>" if update.note else ""
+
+    plain = (
+        f"Hi {first_name},\n\n"
+        f"There is a new update on your order for {order_name}.\n\n"
+        f"Status: {update.get_status_display()}\n"
+        f"Date:   {update.created_at.strftime('%d %b %Y')}\n"
+        f"{note_block_text}\n"
+        f"Log in to your portal to view your full order history:\n{portal_url}\n\n"
+        f"Best regards,\nThe G2G Textiles Team\nproduction@gtwog.ch"
+    )
+
+    html = (
+        f"<p>Hi {first_name},</p>"
+        f"<p>There is a new update on your order for <strong>{order_name}</strong>.</p>"
+        f"<p><strong>Status:</strong> {update.get_status_display()}<br>"
+        f"<strong>Date:</strong> {update.created_at.strftime('%d %b %Y')}</p>"
+        f"{note_block_html}"
+        f"<p><a href='{portal_url}'>View your full order history</a></p>"
+        f"<p>Best regards,<br>The G2G Textiles Team<br>production@gtwog.ch</p>"
+    )
+
     try:
         send_mail(
             subject=subject,
-            message="\n".join(lines),
+            message=plain,
             from_email=django_settings.DEFAULT_FROM_EMAIL,
             recipient_list=[quote.customer.email],
+            html_message=html,
             fail_silently=False,
         )
     except Exception as e:
@@ -458,6 +468,25 @@ def customer_order(request, pk):
         'quote': quote,
         'updates': updates,
     })
+
+
+@login_required
+def customer_order_notifications(request, pk):
+    if _is_g2g_staff(request.user) or _is_factory_user(request.user):
+        return redirect('portal_home')
+    if request.method != 'POST':
+        return redirect('customer_order', pk=pk)
+    try:
+        quote = QuoteRequest.objects.get(pk=pk, customer=request.user)
+    except QuoteRequest.DoesNotExist:
+        raise Http404
+    quote.notify_on_updates = not quote.notify_on_updates
+    quote.save(update_fields=['notify_on_updates'])
+    if quote.notify_on_updates:
+        messages.success(request, _('Email notifications turned on.'))
+    else:
+        messages.success(request, _('Email notifications turned off.'))
+    return redirect('customer_order', pk=pk)
 
 
 @login_required

@@ -6,6 +6,14 @@
 {% block content %}
 <a href="{% url 'customer_dashboard' %}" class="portal-back">← {% trans "Back to My Orders" %}</a>
 
+{% if messages %}
+  <div class="portal-messages">
+    {% for msg in messages %}
+      <div class="portal-msg">{{ msg }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
 <div class="portal-header">
   <h1>{{ quote.company_name|default:quote.contact_name }}</h1>
   <p>{% trans "Submitted" %} {{ quote.submitted_at|date:"d M Y" }}</p>
@@ -32,7 +40,19 @@
 
 <div class="portal-card">
   <h2>{% trans "Status Updates" %}</h2>
-  {% if updates %}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border)">
+    <span style="font-size:0.85rem;font-weight:500">{% trans "Email notifications" %}</span>
+    <form method="post" action="{% url 'customer_order_notifications' quote.pk %}" style="display:inline">
+      {% csrf_token %}
+      {% if quote.notify_on_updates %}
+        <button type="submit" class="btn btn--ghost" style="font-size:0.82rem;padding:0.25rem 0.7rem">{% trans "Turn off" %}</button>
+      {% else %}
+        <button type="submit" class="btn btn--ghost" style="font-size:0.82rem;padding:0.25rem 0.7rem">{% trans "Turn on" %}</button>
+      {% endif %}
+    </form>
+  </div>
+
+{% if updates %}
     <div class="timeline">
       {% for u in updates %}
         <div class="timeline-entry">

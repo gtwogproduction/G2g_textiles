@@ -201,6 +201,10 @@ class QuoteRequest(models.Model):
         settings.AUTH_USER_MODEL, null=True, blank=True,
         on_delete=models.SET_NULL, related_name='assigned_orders'
     )
+    notify_on_updates = models.BooleanField(
+        default=True,
+        help_text='Send the customer an email when a new status update is posted.'
+    )
 
     def __str__(self):
         return f"{self.company_name} — {self.contact_name} ({self.submitted_at.strftime('%d %b %Y')})"

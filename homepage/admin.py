@@ -36,7 +36,7 @@ class QuoteRequestAdmin(admin.ModelAdmin):
         ('Customisation', {'fields': ('brand_colours', 'print_method', 'print_positions', 'has_logo', 'design_files_status', 'pantone_matching', 'customisation_notes')}),
         ('Special Requirements', {'fields': ('sustainability', 'certifications_needed', 'existing_supplier', 'existing_supplier_notes', 'heard_about_us', 'additional_notes')}),
         ('Portal', {
-            'fields': ('customer', 'assigned_factory'),
+            'fields': ('customer', 'assigned_factory', 'notify_on_updates'),
             'description': 'Link this quote to a customer account and assign a factory. Create user accounts in the Users section of admin, then add them to the "g2g_staff" or "factory" group as needed.',
         }),
         ('Meta', {'fields': ('status', 'submitted_at')}),
