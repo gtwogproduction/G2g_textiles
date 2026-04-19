@@ -27,4 +27,5 @@ urlpatterns = [
     path('portal/staff/quote/<int:quote_pk>/send/', views.staff_quote_send, name='staff_quote_send'),
     path('portal/staff/quote/<int:quote_pk>/print/', views.staff_quote_print, name='staff_quote_print'),
     path('portal/customer/<int:pk>/quote/', views.customer_quote_view, name='customer_quote_view'),
+    path('portal/staff/update/<int:update_pk>/delete/', views.staff_delete_update, name='staff_delete_update'),
 ]

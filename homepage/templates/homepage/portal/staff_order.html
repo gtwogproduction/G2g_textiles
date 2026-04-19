@@ -66,6 +66,10 @@
                   <a href="{{ u.attachment.url }}" target="_blank" rel="noopener">{% trans "View attachment" %}</a>
                 </div>
               {% endif %}
+              <form method="post" action="{% url 'staff_delete_update' u.pk %}" style="margin-top:0.5rem" onsubmit="return confirm('Delete this update?')">
+                {% csrf_token %}
+                <button type="submit" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:var(--muted);padding:0;text-decoration:underline">{% trans "Delete" %}</button>
+              </form>
             </div>
           {% endfor %}
         </div>

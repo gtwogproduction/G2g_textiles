@@ -1233,3 +1233,19 @@ def customer_quote_view(request, pk):
         'quote_request': quote_request,
         'line_items': line_items,
     })
+
+
+@login_required
+def staff_delete_update(request, update_pk):
+    if not _is_g2g_staff(request.user):
+        return redirect('portal_home')
+    if request.method != 'POST':
+        return redirect('staff_dashboard')
+    try:
+        update = OrderStatusUpdate.objects.get(pk=update_pk)
+    except OrderStatusUpdate.DoesNotExist:
+        raise Http404
+    order_pk = update.quote_request_id
+    update.delete()
+    messages.success(request, _('Status update deleted.'))
+    return redirect('staff_order', pk=order_pk)
