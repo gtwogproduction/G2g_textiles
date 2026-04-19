@@ -1,0 +1,52 @@
+{% extends 'homepage/portal/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Assigned Orders" %}{% endblock %}
+
+{% block content %}
+<div class="portal-header">
+  <h1>{% trans "Assigned Orders" %}</h1>
+  <p>{% trans "Orders assigned to your factory. Post updates to notify the customer." %}</p>
+</div>
+
+{% if quotes %}
+  <div class="portal-card">
+    <table class="portal-table">
+      <thead>
+        <tr>
+          <th>{% trans "Company" %}</th>
+          <th>{% trans "Products" %}</th>
+          <th>{% trans "Quantity" %}</th>
+          <th>{% trans "Submitted" %}</th>
+          <th>{% trans "Latest Status" %}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for q in quotes %}
+        <tr>
+          <td>{{ q.company_name|default:"—" }}</td>
+          <td>{{ q.product_types }}</td>
+          <td>{{ q.get_quantity_per_style_display }}</td>
+          <td>{{ q.submitted_at|date:"d M Y" }}</td>
+          <td>
+            {% with latest=q.status_updates.first %}
+              {% if latest %}
+                <span class="status-badge status-badge--{{ latest.status }}">{{ latest.get_status_display }}</span>
+              {% else %}
+                <span style="color:var(--muted);font-size:0.85rem;">—</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td><a href="{% url 'factory_order' q.pk %}">{% trans "Update" %} →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="portal-empty">
+    <p>{% trans "No orders are currently assigned to you." %}</p>
+  </div>
+{% endif %}
+{% endblock %}

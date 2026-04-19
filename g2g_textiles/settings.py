@@ -125,3 +125,8 @@ EMAIL_HOST_USER = 'resend'
 EMAIL_HOST_PASSWORD = os.environ.get('RESEND_API_KEY', '')
 DEFAULT_FROM_EMAIL = 'G2G Textiles <production@gtwog.ch>'
 QUOTE_NOTIFICATION_EMAIL = 'production@gtwog.ch'
+
+# --- Auth ---
+LOGIN_URL = '/en/portal/login/'
+LOGIN_REDIRECT_URL = '/en/portal/'
+LOGOUT_REDIRECT_URL = '/en/'

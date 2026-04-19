@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
-    ContactSubmission, QuoteRequest,
+    ContactSubmission, QuoteRequest, OrderStatusUpdate,
     SiteSettings, Service, HowItWorksStep, ClientLogo, LegalPage,
     BlogPost, BlogCategory, BlogPostImage,
 )
@@ -15,20 +15,40 @@ class ContactSubmissionAdmin(admin.ModelAdmin):
     readonly_fields = ['submitted_at']
 
 
+class OrderStatusUpdateInline(admin.TabularInline):
+    model = OrderStatusUpdate
+    extra = 0
+    readonly_fields = ['created_by', 'created_at']
+    fields = ['status', 'note', 'attachment', 'created_by', 'created_at']
+
+
 @admin.register(QuoteRequest)
 class QuoteRequestAdmin(admin.ModelAdmin):
-    list_display = ['company_name', 'contact_name', 'email', 'industry', 'quantity_per_style', 'status', 'submitted_at']
+    list_display = ['company_name', 'contact_name', 'email', 'industry', 'quantity_per_style', 'status', 'customer', 'assigned_factory', 'submitted_at']
     list_filter = ['status', 'industry', 'submitted_at']
     search_fields = ['company_name', 'contact_name', 'email']
     readonly_fields = ['submitted_at']
     list_editable = ['status']
+    inlines = [OrderStatusUpdateInline]
     fieldsets = (
         ('About', {'fields': ('company_name', 'industry', 'industry_other', 'contact_name', 'role', 'email', 'phone', 'website')}),
         ('The Order', {'fields': ('product_types', 'product_other', 'num_styles', 'quantity_per_style')}),
         ('Customisation', {'fields': ('brand_colours', 'print_method', 'print_positions', 'has_logo', 'design_files_status', 'pantone_matching', 'customisation_notes')}),
         ('Special Requirements', {'fields': ('sustainability', 'certifications_needed', 'existing_supplier', 'existing_supplier_notes', 'heard_about_us', 'additional_notes')}),
+        ('Portal', {
+            'fields': ('customer', 'assigned_factory'),
+            'description': 'Link this quote to a customer account and assign a factory. Create user accounts in the Users section of admin, then add them to the "g2g_staff" or "factory" group as needed.',
+        }),
         ('Meta', {'fields': ('status', 'submitted_at')}),
     )
+
+
+@admin.register(OrderStatusUpdate)
+class OrderStatusUpdateAdmin(admin.ModelAdmin):
+    list_display = ['quote_request', 'status', 'created_by', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['quote_request__company_name', 'note']
+    readonly_fields = ['created_at']
 
 
 @admin.register(SiteSettings)

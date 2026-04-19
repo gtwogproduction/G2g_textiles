@@ -1,0 +1,51 @@
+{% extends 'homepage/portal/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "My Orders" %}{% endblock %}
+
+{% block content %}
+<div class="portal-header">
+  <h1>{% trans "My Orders" %}</h1>
+  <p>{% trans "Track the status of your quote requests and production orders." %}</p>
+</div>
+
+{% if quotes %}
+  <div class="portal-card">
+    <table class="portal-table">
+      <thead>
+        <tr>
+          <th>{% trans "Company" %}</th>
+          <th>{% trans "Products" %}</th>
+          <th>{% trans "Submitted" %}</th>
+          <th>{% trans "Status" %}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for q in quotes %}
+        <tr>
+          <td>{{ q.company_name|default:q.contact_name }}</td>
+          <td>{{ q.product_types }}</td>
+          <td>{{ q.submitted_at|date:"d M Y" }}</td>
+          <td>
+            {% with latest=q.status_updates.first %}
+              {% if latest %}
+                <span class="status-badge status-badge--{{ latest.status }}">{{ latest.get_status_display }}</span>
+              {% else %}
+                <span class="status-badge status-badge--quote_received">{% trans "Quote Received" %}</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td><a href="{% url 'customer_order' q.pk %}">{% trans "View" %} →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="portal-empty">
+    <p>{% trans "No orders linked to your account yet." %}</p>
+    <p>{% trans "Contact us at production@gtwog.ch if you have submitted a quote." %}</p>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from cloudinary_storage.storage import VideoMediaCloudinaryStorage
 
 
@@ -192,6 +193,14 @@ class QuoteRequest(models.Model):
     additional_notes = models.TextField(blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    customer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='quote_requests'
+    )
+    assigned_factory = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='assigned_orders'
+    )
 
     def __str__(self):
         return f"{self.company_name} — {self.contact_name} ({self.submitted_at.strftime('%d %b %Y')})"
@@ -200,6 +209,37 @@ class QuoteRequest(models.Model):
         ordering = ['-submitted_at']
         verbose_name = 'Quote Request'
         verbose_name_plural = 'Quote Requests'
+
+
+class OrderStatusUpdate(models.Model):
+    STATUS_CHOICES = [
+        ('quote_received', 'Quote Received'),
+        ('in_review', 'In Review'),
+        ('quote_sent', 'Quote Sent'),
+        ('sampling', 'Sampling'),
+        ('sample_approved', 'Sample Approved'),
+        ('in_production', 'In Production'),
+        ('quality_check', 'Quality Check'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+    ]
+    quote_request = models.ForeignKey(QuoteRequest, on_delete=models.CASCADE, related_name='status_updates')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    note = models.TextField(blank=True)
+    attachment = models.FileField(upload_to='status_updates/', blank=True, null=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name='status_updates_created'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_status_display()} — {self.quote_request}"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Order Status Update'
+        verbose_name_plural = 'Order Status Updates'
 
 
 class SiteSettings(models.Model):

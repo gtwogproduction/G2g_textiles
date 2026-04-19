@@ -1,0 +1,331 @@
+"""
+Integration tests for the G2G Textiles customer/production portal.
+
+Roles:
+  - g2g_staff group  → staff views
+  - factory group    → factory views
+  - no group         → customer views
+"""
+
+from django.test import TestCase, Client, override_settings
+from django.contrib.auth.models import User, Group
+from django.urls import reverse
+
+from homepage.models import QuoteRequest, OrderStatusUpdate
+
+
+# ---------------------------------------------------------------------------
+# Helpers / factories
+# ---------------------------------------------------------------------------
+
+def make_group(name):
+    """Return (or create) a Django auth Group by name."""
+    group, _ = Group.objects.get_or_create(name=name)
+    return group
+
+
+def make_user(username, password='testpass123', group_name=None):
+    """Create a User, optionally adding them to a named group."""
+    user = User.objects.create_user(username=username, password=password, email=f'{username}@test.com')
+    if group_name:
+        user.groups.add(make_group(group_name))
+    return user
+
+
+def make_quote(customer=None, assigned_factory=None):
+    """
+    Create a minimal QuoteRequest satisfying all required CharField constraints.
+    Only fields without model-level defaults are supplied explicitly.
+    """
+    return QuoteRequest.objects.create(
+        company_name='Test Co',
+        industry='sports_club',
+        contact_name='Jane Doe',
+        role='owner',
+        email='jane@test.com',
+        product_types='tshirts',
+        quantity_per_style='50-100',
+        gender_sizing='unisex',
+        print_method='screen_print',
+        print_positions='1',
+        design_files_status='yes_vector',
+        desired_delivery='flexible',
+        sample_required='no',
+        budget_range='1k-5k',
+        customer=customer,
+        assigned_factory=assigned_factory,
+    )
+
+
+# ---------------------------------------------------------------------------
+# URL constants (all under /en/ because of i18n_patterns)
+# ---------------------------------------------------------------------------
+
+LOGIN_URL = '/en/portal/login/'
+PORTAL_HOME_URL = '/en/portal/'
+CUSTOMER_DASHBOARD_URL = '/en/portal/customer/'
+STAFF_DASHBOARD_URL = '/en/portal/staff/'
+FACTORY_DASHBOARD_URL = '/en/portal/factory/'
+
+
+def customer_order_url(pk):
+    return f'/en/portal/customer/{pk}/'
+
+
+def staff_order_url(pk):
+    return f'/en/portal/staff/{pk}/'
+
+
+def factory_order_url(pk):
+    return f'/en/portal/factory/{pk}/'
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+@override_settings(STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage')
+class PortalTestCase(TestCase):
+    """Base test case that bypasses the staticfiles manifest requirement."""
+    pass
+
+
+class AuthRedirectTests(PortalTestCase):
+    """GIVEN an unauthenticated visitor"""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_unauthenticated_portal_home_redirects_to_login(self):
+        """WHEN they hit /en/portal/ SHOULD redirect to the login page."""
+        response = self.client.get(PORTAL_HOME_URL)
+        self.assertRedirects(response, f'{LOGIN_URL}?next={PORTAL_HOME_URL}', fetch_redirect_response=False)
+
+    def test_unauthenticated_customer_dashboard_redirects_to_login(self):
+        """WHEN they hit /en/portal/customer/ SHOULD redirect to the login page."""
+        response = self.client.get(CUSTOMER_DASHBOARD_URL)
+        self.assertRedirects(response, f'{LOGIN_URL}?next={CUSTOMER_DASHBOARD_URL}', fetch_redirect_response=False)
+
+    def test_unauthenticated_staff_dashboard_redirects_to_login(self):
+        """WHEN they hit /en/portal/staff/ SHOULD redirect to the login page."""
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertRedirects(response, f'{LOGIN_URL}?next={STAFF_DASHBOARD_URL}', fetch_redirect_response=False)
+
+
+class LoginTests(PortalTestCase):
+    """GIVEN the login form"""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = make_user('logintest')
+
+    def test_valid_credentials_redirect_to_portal_home(self):
+        """WHEN correct credentials are POSTed SHOULD redirect to portal_home."""
+        response = self.client.post(LOGIN_URL, {'username': 'logintest', 'password': 'testpass123'})
+        self.assertRedirects(response, PORTAL_HOME_URL, fetch_redirect_response=False)
+
+    def test_wrong_password_re_renders_login_with_error(self):
+        """WHEN wrong password is POSTed SHOULD re-render login (200) with a form error."""
+        response = self.client.post(LOGIN_URL, {'username': 'logintest', 'password': 'wrongpass'})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+
+
+class RoleRoutingTests(PortalTestCase):
+    """GIVEN portal_home WHEN a user is logged in SHOULD redirect by role."""
+
+    def test_staff_user_redirected_to_staff_dashboard(self):
+        """GIVEN a g2g_staff user SHOULD redirect to staff_dashboard."""
+        staff = make_user('staffroute', group_name='g2g_staff')
+        self.client.force_login(staff)
+        response = self.client.get(PORTAL_HOME_URL)
+        self.assertRedirects(response, STAFF_DASHBOARD_URL, fetch_redirect_response=False)
+
+    def test_factory_user_redirected_to_factory_dashboard(self):
+        """GIVEN a factory user SHOULD redirect to factory_dashboard."""
+        factory = make_user('factoryroute', group_name='factory')
+        self.client.force_login(factory)
+        response = self.client.get(PORTAL_HOME_URL)
+        self.assertRedirects(response, FACTORY_DASHBOARD_URL, fetch_redirect_response=False)
+
+    def test_customer_user_redirected_to_customer_dashboard(self):
+        """GIVEN a user with no group SHOULD redirect to customer_dashboard."""
+        customer = make_user('customerroute')
+        self.client.force_login(customer)
+        response = self.client.get(PORTAL_HOME_URL)
+        self.assertRedirects(response, CUSTOMER_DASHBOARD_URL, fetch_redirect_response=False)
+
+
+class CustomerIsolationTests(PortalTestCase):
+    """GIVEN a customer user WHEN viewing orders SHOULD only see their own."""
+
+    def setUp(self):
+        self.customer = make_user('customer1')
+        self.other_customer = make_user('customer2')
+        self.own_quote = make_quote(customer=self.customer)
+        self.other_quote = make_quote(customer=self.other_customer)
+        self.client.force_login(self.customer)
+
+    def test_customer_can_view_own_order(self):
+        """SHOULD return 200 for an order belonging to the logged-in customer."""
+        response = self.client.get(customer_order_url(self.own_quote.pk))
+        self.assertEqual(response.status_code, 200)
+
+    def test_customer_gets_404_on_another_customers_order(self):
+        """SHOULD return 404 when accessing an order owned by a different customer."""
+        response = self.client.get(customer_order_url(self.other_quote.pk))
+        self.assertEqual(response.status_code, 404)
+
+
+class StaffAccessTests(PortalTestCase):
+    """GIVEN a g2g_staff user WHEN accessing staff views SHOULD see all orders."""
+
+    def setUp(self):
+        self.staff = make_user('staffuser', group_name='g2g_staff')
+        self.customer = make_user('anycustomer')
+        self.quote = make_quote(customer=self.customer)
+        self.client.force_login(self.staff)
+
+    def test_staff_dashboard_returns_200(self):
+        """SHOULD return 200 for the staff dashboard."""
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.status_code, 200)
+
+    def test_staff_can_view_any_order(self):
+        """SHOULD return 200 for staff_order regardless of quote ownership."""
+        response = self.client.get(staff_order_url(self.quote.pk))
+        self.assertEqual(response.status_code, 200)
+
+
+class FactoryIsolationTests(PortalTestCase):
+    """GIVEN a factory user WHEN accessing factory views SHOULD only see assigned orders."""
+
+    def setUp(self):
+        self.factory = make_user('factory1', group_name='factory')
+        self.other_factory = make_user('factory2', group_name='factory')
+        self.assigned_quote = make_quote(assigned_factory=self.factory)
+        self.unassigned_quote = make_quote(assigned_factory=self.other_factory)
+        self.client.force_login(self.factory)
+
+    def test_factory_gets_404_on_order_not_assigned_to_them(self):
+        """SHOULD return 404 when factory_order pk is not assigned to this user."""
+        response = self.client.get(factory_order_url(self.unassigned_quote.pk))
+        self.assertEqual(response.status_code, 404)
+
+    def test_factory_can_view_assigned_order(self):
+        """SHOULD return 200 for an order assigned to this factory user."""
+        response = self.client.get(factory_order_url(self.assigned_quote.pk))
+        self.assertEqual(response.status_code, 200)
+
+
+class StaffStatusUpdateTests(PortalTestCase):
+    """GIVEN a g2g_staff user WHEN posting to staff_order SHOULD create an OrderStatusUpdate."""
+
+    def setUp(self):
+        self.staff = make_user('staffupdate', group_name='g2g_staff')
+        self.customer = make_user('custupdate')
+        self.quote = make_quote(customer=self.customer)
+        self.client.force_login(self.staff)
+
+    def test_post_update_creates_order_status_update(self):
+        """WHEN post_update is submitted SHOULD create one OrderStatusUpdate for the quote."""
+        payload = {
+            'post_update': '1',
+            'status': 'in_review',
+            'note': 'We are looking into your order.',
+        }
+        response = self.client.post(staff_order_url(self.quote.pk), payload)
+        # Should redirect back to the same staff_order page after success
+        self.assertRedirects(response, staff_order_url(self.quote.pk), fetch_redirect_response=False)
+        self.assertEqual(OrderStatusUpdate.objects.filter(quote_request=self.quote).count(), 1)
+        update = OrderStatusUpdate.objects.get(quote_request=self.quote)
+        self.assertEqual(update.status, 'in_review')
+        self.assertEqual(update.created_by, self.staff)
+
+
+class StaffAssignFactoryTests(PortalTestCase):
+    """GIVEN a g2g_staff user WHEN posting assign_factory SHOULD set quote.assigned_factory."""
+
+    def setUp(self):
+        self.staff = make_user('staffassign', group_name='g2g_staff')
+        self.factory_user = make_user('factoryassign', group_name='factory')
+        self.quote = make_quote()
+        self.client.force_login(self.staff)
+
+    def test_assign_factory_sets_assigned_factory_on_quote(self):
+        """WHEN assign_factory is submitted SHOULD persist the factory user on the quote."""
+        payload = {
+            'assign_factory': '1',
+            'factory': self.factory_user.pk,
+        }
+        response = self.client.post(staff_order_url(self.quote.pk), payload)
+        self.assertRedirects(response, staff_order_url(self.quote.pk), fetch_redirect_response=False)
+        self.quote.refresh_from_db()
+        self.assertEqual(self.quote.assigned_factory, self.factory_user)
+
+
+class FactoryStatusUpdateTests(PortalTestCase):
+    """GIVEN a factory user assigned to an order WHEN posting to factory_order SHOULD create an OrderStatusUpdate."""
+
+    def setUp(self):
+        self.factory = make_user('factorystatus', group_name='factory')
+        self.customer = make_user('custfactory')
+        self.quote = make_quote(customer=self.customer, assigned_factory=self.factory)
+        self.client.force_login(self.factory)
+
+    def test_post_creates_order_status_update(self):
+        """WHEN a valid status form is POSTed SHOULD create one OrderStatusUpdate."""
+        payload = {
+            'status': 'in_production',
+            'note': 'Production started today.',
+        }
+        response = self.client.post(factory_order_url(self.quote.pk), payload)
+        self.assertRedirects(response, factory_order_url(self.quote.pk), fetch_redirect_response=False)
+        self.assertEqual(OrderStatusUpdate.objects.filter(quote_request=self.quote).count(), 1)
+        update = OrderStatusUpdate.objects.get(quote_request=self.quote)
+        self.assertEqual(update.status, 'in_production')
+        self.assertEqual(update.created_by, self.factory)
+
+
+class CustomerBlockedFromStaffViewsTests(PortalTestCase):
+    """GIVEN a customer user (no group) WHEN hitting staff URLs SHOULD be redirected away."""
+
+    def setUp(self):
+        self.customer = make_user('custblocked')
+        self.quote = make_quote(customer=self.customer)
+        self.client.force_login(self.customer)
+
+    def test_customer_cannot_access_staff_dashboard(self):
+        """SHOULD redirect (not 200) when a customer GETs the staff dashboard."""
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        # staff_dashboard redirects non-staff to portal_home, which then redirects to customer_dashboard
+        self.assertIn(response.status_code, [301, 302])
+        self.assertNotEqual(response.status_code, 200)
+
+    def test_customer_cannot_access_staff_order(self):
+        """SHOULD redirect (not 200) when a customer GETs a staff_order page."""
+        response = self.client.get(staff_order_url(self.quote.pk))
+        self.assertIn(response.status_code, [301, 302])
+        self.assertNotEqual(response.status_code, 200)
+
+
+class StaffBlockedFromCustomerViewsTests(PortalTestCase):
+    """GIVEN a g2g_staff user WHEN hitting customer-only URLs SHOULD be redirected via portal_home."""
+
+    def setUp(self):
+        self.staff = make_user('staffblocked', group_name='g2g_staff')
+        self.customer = make_user('custowner')
+        self.quote = make_quote(customer=self.customer)
+        self.client.force_login(self.staff)
+
+    def test_staff_redirected_from_customer_dashboard(self):
+        """SHOULD not return 200 — staff is redirected away from customer_dashboard."""
+        response = self.client.get(CUSTOMER_DASHBOARD_URL)
+        self.assertIn(response.status_code, [301, 302])
+        self.assertNotEqual(response.status_code, 200)
+
+    def test_staff_redirected_from_customer_order(self):
+        """SHOULD not return 200 — staff is redirected away from customer_order."""
+        response = self.client.get(customer_order_url(self.quote.pk))
+        self.assertIn(response.status_code, [301, 302])
+        self.assertNotEqual(response.status_code, 200)

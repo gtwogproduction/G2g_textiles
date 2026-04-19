@@ -1,0 +1,62 @@
+{% extends 'homepage/portal/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ quote.company_name|default:quote.contact_name }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'customer_dashboard' %}" class="portal-back">← {% trans "Back to My Orders" %}</a>
+
+<div class="portal-header">
+  <h1>{{ quote.company_name|default:quote.contact_name }}</h1>
+  <p>{% trans "Submitted" %} {{ quote.submitted_at|date:"d M Y" }}</p>
+</div>
+
+<div class="order-meta">
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Products" %}</div>
+    <div class="order-meta__value">{{ quote.product_types }}</div>
+  </div>
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Quantity" %}</div>
+    <div class="order-meta__value">{{ quote.get_quantity_per_style_display }} &times; {{ quote.num_styles }} {% trans "style" %}{{ quote.num_styles|pluralize }}</div>
+  </div>
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Delivery" %}</div>
+    <div class="order-meta__value">{{ quote.delivery_country }}</div>
+  </div>
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Timeline" %}</div>
+    <div class="order-meta__value">{{ quote.get_desired_delivery_display }}</div>
+  </div>
+</div>
+
+<div class="portal-card">
+  <h2>{% trans "Status Updates" %}</h2>
+  {% if updates %}
+    <div class="timeline">
+      {% for u in updates %}
+        <div class="timeline-entry">
+          <div class="timeline-entry__meta">
+            <span class="status-badge status-badge--{{ u.status }}">{{ u.get_status_display }}</span>
+            <span class="timeline-entry__date">{{ u.created_at|date:"d M Y" }}</span>
+          </div>
+          {% if u.note %}
+            <div class="timeline-entry__note">{{ u.note|linebreaksbr }}</div>
+          {% endif %}
+          {% if u.attachment %}
+            <div class="timeline-entry__attachment">
+              {% if u.attachment.name|slice:"-4:" in ".jpg .png .gif .webp .jpeg" %}
+                <img src="{{ u.attachment.url }}" alt="">
+              {% else %}
+                <a href="{{ u.attachment.url }}" target="_blank" rel="noopener">{% trans "View attachment" %}</a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="timeline-empty">{% trans "No updates yet. We will notify you by email once production begins." %}</p>
+  {% endif %}
+</div>
+{% endblock %}

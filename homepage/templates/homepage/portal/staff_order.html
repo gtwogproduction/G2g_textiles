@@ -1,0 +1,108 @@
+{% extends 'homepage/portal/base.html' %}
+{% load i18n %}
+
+{% block title %}{{ quote.company_name|default:quote.contact_name }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'staff_dashboard' %}" class="portal-back">← {% trans "Back to All Orders" %}</a>
+
+<div class="portal-header">
+  <h1>{{ quote.company_name|default:quote.contact_name }}</h1>
+  <p>{{ quote.contact_name }} &mdash; {{ quote.email }} &mdash; {% trans "Submitted" %} {{ quote.submitted_at|date:"d M Y" }}</p>
+</div>
+
+<div class="order-meta">
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Products" %}</div>
+    <div class="order-meta__value">{{ quote.product_types }}</div>
+  </div>
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Quantity" %}</div>
+    <div class="order-meta__value">{{ quote.get_quantity_per_style_display }} &times; {{ quote.num_styles }} {% trans "style" %}{{ quote.num_styles|pluralize }}</div>
+  </div>
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Print method" %}</div>
+    <div class="order-meta__value">{{ quote.get_print_method_display }}</div>
+  </div>
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Customer account" %}</div>
+    <div class="order-meta__value">{{ quote.customer.username|default:"—" }}</div>
+  </div>
+  <div class="order-meta__item">
+    <div class="order-meta__label">{% trans "Factory" %}</div>
+    <div class="order-meta__value">{{ quote.assigned_factory.username|default:"—" }}</div>
+  </div>
+</div>
+
+<div class="portal-order-grid">
+
+  <!-- Left: timeline -->
+  <div>
+    <div class="portal-card">
+      <h2>{% trans "Status Timeline" %}</h2>
+      {% if updates %}
+        <div class="timeline">
+          {% for u in updates %}
+            <div class="timeline-entry">
+              <div class="timeline-entry__meta">
+                <span class="status-badge status-badge--{{ u.status }}">{{ u.get_status_display }}</span>
+                <span class="timeline-entry__date">{{ u.created_at|date:"d M Y" }}</span>
+                <span class="timeline-entry__by">{% trans "by" %} {{ u.created_by.username|default:"—" }}</span>
+              </div>
+              {% if u.note %}
+                <div class="timeline-entry__note">{{ u.note|linebreaksbr }}</div>
+              {% endif %}
+              {% if u.attachment %}
+                <div class="timeline-entry__attachment">
+                  <a href="{{ u.attachment.url }}" target="_blank" rel="noopener">{% trans "View attachment" %}</a>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="timeline-empty">{% trans "No updates posted yet." %}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right: actions -->
+  <div>
+
+    <!-- Post status update -->
+    <div class="portal-card">
+      <h2>{% trans "Post Status Update" %}</h2>
+      <form method="post" enctype="multipart/form-data" class="portal-form">
+        {% csrf_token %}
+        <div>
+          <label>{% trans "Status" %}</label>
+          {{ update_form.status }}
+        </div>
+        <div>
+          <label>{% trans "Note" %} <small style="color:var(--muted);font-weight:300">({% trans "optional" %})</small></label>
+          {{ update_form.note }}
+        </div>
+        <div>
+          <label>{% trans "Attachment" %} <small style="color:var(--muted);font-weight:300">({% trans "optional" %})</small></label>
+          {{ update_form.attachment }}
+        </div>
+        <button type="submit" name="post_update" class="btn btn--primary">{% trans "Post Update" %}</button>
+      </form>
+    </div>
+
+    <!-- Assign factory -->
+    <div class="portal-card">
+      <h2>{% trans "Assign Factory" %}</h2>
+      <form method="post" class="portal-form">
+        {% csrf_token %}
+        <div>
+          <label>{% trans "Factory" %}</label>
+          {{ assign_form.factory }}
+        </div>
+        <button type="submit" name="assign_factory" class="btn btn--ghost">{% trans "Save Assignment" %}</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

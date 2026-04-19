@@ -1,5 +1,6 @@
 from django import forms
-from .models import ContactSubmission, QuoteRequest
+from django.contrib.auth.models import User
+from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate
 
 PRODUCT_CHOICES = [
     ('tshirts', 'T-Shirts'),
@@ -140,4 +141,22 @@ class QuoteStep5Form(forms.Form):
     additional_notes = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={'rows': 4, 'placeholder': 'Anything else we should know?'})
+    )
+
+
+class StatusUpdateForm(forms.Form):
+    status = forms.ChoiceField(choices=OrderStatusUpdate.STATUS_CHOICES)
+    note = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Add a note for the customer (optional)'})
+    )
+    attachment = forms.FileField(required=False)
+
+
+class FactoryAssignForm(forms.Form):
+    factory = forms.ModelChoiceField(
+        queryset=User.objects.filter(groups__name='factory'),
+        required=False,
+        empty_label='— No factory assigned —',
+        label='Assign to factory',
     )

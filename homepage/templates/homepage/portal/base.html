@@ -1,0 +1,38 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ request.LANGUAGE_CODE|default:'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% trans "Portal" %}{% endblock %} — G2G Textiles</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="{% static 'homepage/css/portal.css' %}">
+</head>
+<body>
+
+<nav class="portal-nav">
+  <div class="portal-nav__inner">
+    <a href="{% url 'homepage' %}" class="portal-nav__logo">G2G <span>Textiles</span></a>
+    <div class="portal-nav__right">
+      {% if user.is_authenticated %}
+        <span class="portal-nav__user">{{ user.get_full_name|default:user.username }}</span>
+        <a href="{% url 'portal_logout' %}" class="portal-nav__logout">{% trans "Log out" %}</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<div class="portal-wrap">
+  {% if messages %}
+    <div class="portal-messages">
+      {% for msg in messages %}
+        <div class="portal-msg {% if msg.tags == 'error' %}portal-msg--error{% endif %}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

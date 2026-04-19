@@ -248,3 +248,157 @@ msgstr "Weltweiter Versand"
 
 msgid "Delivery to multiple locations required"
 msgstr "Lieferung an mehrere Standorte erforderlich"
+
+# --- Portal ---
+msgid "Portal"
+msgstr "Portal"
+
+msgid "Portal Login"
+msgstr "Portal-Login"
+
+msgid "Log in to view your order status or manage production updates."
+msgstr "Melden Sie sich an, um den Bestellstatus einzusehen oder Produktionsupdates zu verwalten."
+
+msgid "Username"
+msgstr "Benutzername"
+
+msgid "Password"
+msgstr "Passwort"
+
+msgid "Log in"
+msgstr "Anmelden"
+
+msgid "Log out"
+msgstr "Abmelden"
+
+msgid "My Orders"
+msgstr "Meine Bestellungen"
+
+msgid "Track the status of your quote requests and production orders."
+msgstr "Verfolgen Sie den Status Ihrer Angebotsanfragen und Produktionsaufträge."
+
+msgid "Company"
+msgstr "Unternehmen"
+
+msgid "Products"
+msgstr "Produkte"
+
+msgid "Submitted"
+msgstr "Eingereicht"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "View"
+msgstr "Ansehen"
+
+msgid "No orders linked to your account yet."
+msgstr "Noch keine Bestellungen mit Ihrem Konto verknüpft."
+
+msgid "Contact us at production@gtwog.ch if you have submitted a quote."
+msgstr "Kontaktieren Sie uns unter production@gtwog.ch, wenn Sie bereits eine Anfrage gestellt haben."
+
+msgid "Back to My Orders"
+msgstr "Zurück zu meinen Bestellungen"
+
+msgid "Quantity"
+msgstr "Menge"
+
+msgid "Status Updates"
+msgstr "Statusaktualisierungen"
+
+msgid "No updates yet. We will notify you by email once production begins."
+msgstr "Noch keine Updates. Wir benachrichtigen Sie per E-Mail, sobald die Produktion beginnt."
+
+msgid "View attachment"
+msgstr "Anhang ansehen"
+
+msgid "style"
+msgstr "Style"
+
+msgid "styles"
+msgstr "Styles"
+
+msgid "All Orders"
+msgstr "Alle Bestellungen"
+
+msgid "Manage quote requests and post production updates."
+msgstr "Angebotsanfragen verwalten und Produktionsupdates posten."
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "Customer"
+msgstr "Kunde"
+
+msgid "Factory"
+msgstr "Fabrik"
+
+msgid "Latest Status"
+msgstr "Letzter Status"
+
+msgid "Manage"
+msgstr "Verwalten"
+
+msgid "No orders yet."
+msgstr "Noch keine Bestellungen."
+
+msgid "Back to All Orders"
+msgstr "Zurück zu allen Bestellungen"
+
+msgid "Print method"
+msgstr "Druckmethode"
+
+msgid "Customer account"
+msgstr "Kundenkonto"
+
+msgid "Status Timeline"
+msgstr "Statusverlauf"
+
+msgid "No updates posted yet."
+msgstr "Noch keine Updates gepostet."
+
+msgid "by"
+msgstr "von"
+
+msgid "Post Status Update"
+msgstr "Statusupdate posten"
+
+msgid "Note"
+msgstr "Notiz"
+
+msgid "Attachment"
+msgstr "Anhang"
+
+msgid "Post Update"
+msgstr "Update posten"
+
+msgid "Assign Factory"
+msgstr "Fabrik zuweisen"
+
+msgid "Save Assignment"
+msgstr "Zuweisung speichern"
+
+msgid "Assigned Orders"
+msgstr "Zugewiesene Bestellungen"
+
+msgid "Orders assigned to your factory. Post updates to notify the customer."
+msgstr "Ihrer Fabrik zugewiesene Bestellungen. Posten Sie Updates, um den Kunden zu benachrichtigen."
+
+msgid "Update"
+msgstr "Aktualisieren"
+
+msgid "No orders are currently assigned to you."
+msgstr "Derzeit sind Ihnen keine Bestellungen zugewiesen."
+
+msgid "Timeline"
+msgstr "Zeitverlauf"
+
+msgid "Delivery"
+msgstr "Lieferung"
+
+msgid "Status update posted."
+msgstr "Statusupdate gepostet."
+
+msgid "Factory assigned."
+msgstr "Fabrik zugewiesen."

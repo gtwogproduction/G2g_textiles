@@ -1,13 +1,18 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
+from django.http import Http404
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from .forms import (
     ContactForm,
     QuoteStep1Form, QuoteStep2Form, QuoteStep3Form,
     QuoteStep4Form, QuoteStep5Form,
+    StatusUpdateForm, FactoryAssignForm,
 )
-from .models import ContactSubmission, QuoteRequest
+from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate
 
 QUOTE_STEPS = [
     ('about',   _l('About You'),            QuoteStep1Form),
@@ -336,7 +341,6 @@ def blog_list(request):
 
 def blog_detail(request, slug):
     from .models import BlogPost
-    from django.http import Http404
     try:
         post = BlogPost.objects.get(slug=slug, is_published=True)
     except BlogPost.DoesNotExist:
@@ -345,4 +349,204 @@ def blog_detail(request, slug):
     return render(request, 'homepage/blog_detail.html', {
         'post': post,
         'is_de': is_de,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Portal helpers
+# ---------------------------------------------------------------------------
+
+def _is_g2g_staff(user):
+    return user.groups.filter(name='g2g_staff').exists()
+
+
+def _is_factory_user(user):
+    return user.groups.filter(name='factory').exists()
+
+
+def _send_status_notification(quote, update):
+    if not quote.customer or not quote.customer.email:
+        return
+    from django.core.mail import send_mail
+    from django.conf import settings as django_settings
+
+    first_name = (
+        quote.customer.first_name
+        or (quote.contact_name.split()[0] if quote.contact_name else 'there')
+    )
+    subject = f"Order Update: {update.get_status_display()} — G2G Textiles"
+    lines = [
+        f"Hi {first_name},",
+        "",
+        f"There is a new update on your order for {quote.company_name or quote.contact_name}.",
+        "",
+        f"Status: {update.get_status_display()}",
+        f"Date:   {update.created_at.strftime('%d %b %Y')}",
+    ]
+    if update.note:
+        lines += ["", "Note from production:", update.note]
+    lines += [
+        "",
+        "Log in to your portal to view your full order history:",
+        "https://gtwog.ch/en/portal/customer/" + str(quote.pk) + "/",
+        "",
+        "Best regards,",
+        "The G2G Textiles Team",
+        "production@gtwog.ch",
+    ]
+    try:
+        send_mail(
+            subject=subject,
+            message="\n".join(lines),
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[quote.customer.email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        print(f"Failed to send status notification: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Portal views
+# ---------------------------------------------------------------------------
+
+def portal_login(request):
+    if request.user.is_authenticated:
+        return redirect('portal_home')
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            auth_login(request, form.get_user())
+            return redirect(request.GET.get('next', '') or 'portal_home')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'homepage/portal/login.html', {'form': form})
+
+
+def portal_logout(request):
+    auth_logout(request)
+    return redirect('homepage')
+
+
+@login_required
+def portal_home(request):
+    if _is_g2g_staff(request.user):
+        return redirect('staff_dashboard')
+    if _is_factory_user(request.user):
+        return redirect('factory_dashboard')
+    return redirect('customer_dashboard')
+
+
+@login_required
+def customer_dashboard(request):
+    if _is_g2g_staff(request.user) or _is_factory_user(request.user):
+        return redirect('portal_home')
+    quotes = QuoteRequest.objects.filter(customer=request.user)
+    return render(request, 'homepage/portal/customer_dashboard.html', {'quotes': quotes})
+
+
+@login_required
+def customer_order(request, pk):
+    if _is_g2g_staff(request.user) or _is_factory_user(request.user):
+        return redirect('portal_home')
+    try:
+        quote = QuoteRequest.objects.get(pk=pk, customer=request.user)
+    except QuoteRequest.DoesNotExist:
+        raise Http404
+    updates = quote.status_updates.all()
+    return render(request, 'homepage/portal/customer_order.html', {
+        'quote': quote,
+        'updates': updates,
+    })
+
+
+@login_required
+def staff_dashboard(request):
+    if not _is_g2g_staff(request.user):
+        return redirect('portal_home')
+    quotes = QuoteRequest.objects.all().order_by('-submitted_at')
+    return render(request, 'homepage/portal/staff_dashboard.html', {'quotes': quotes})
+
+
+@login_required
+def staff_order(request, pk):
+    if not _is_g2g_staff(request.user):
+        return redirect('portal_home')
+    try:
+        quote = QuoteRequest.objects.get(pk=pk)
+    except QuoteRequest.DoesNotExist:
+        raise Http404
+
+    update_form = StatusUpdateForm()
+    assign_form = FactoryAssignForm(initial={'factory': quote.assigned_factory})
+
+    if request.method == 'POST':
+        if 'post_update' in request.POST:
+            update_form = StatusUpdateForm(request.POST, request.FILES)
+            if update_form.is_valid():
+                upd = OrderStatusUpdate.objects.create(
+                    quote_request=quote,
+                    status=update_form.cleaned_data['status'],
+                    note=update_form.cleaned_data['note'],
+                    attachment=update_form.cleaned_data.get('attachment'),
+                    created_by=request.user,
+                )
+                _send_status_notification(quote, upd)
+                messages.success(request, _('Status update posted.'))
+                return redirect('staff_order', pk=pk)
+        elif 'assign_factory' in request.POST:
+            assign_form = FactoryAssignForm(request.POST)
+            if assign_form.is_valid():
+                quote.assigned_factory = assign_form.cleaned_data['factory']
+                quote.save(update_fields=['assigned_factory'])
+                messages.success(request, _('Factory assigned.'))
+                return redirect('staff_order', pk=pk)
+
+    updates = quote.status_updates.all()
+    return render(request, 'homepage/portal/staff_order.html', {
+        'quote': quote,
+        'updates': updates,
+        'update_form': update_form,
+        'assign_form': assign_form,
+    })
+
+
+@login_required
+def factory_dashboard(request):
+    if not _is_factory_user(request.user):
+        return redirect('portal_home')
+    quotes = QuoteRequest.objects.filter(assigned_factory=request.user).order_by('-submitted_at')
+    return render(request, 'homepage/portal/factory_dashboard.html', {'quotes': quotes})
+
+
+@login_required
+def factory_order(request, pk):
+    if not _is_factory_user(request.user):
+        return redirect('portal_home')
+    try:
+        quote = QuoteRequest.objects.get(pk=pk, assigned_factory=request.user)
+    except QuoteRequest.DoesNotExist:
+        raise Http404
+
+    update_form = StatusUpdateForm()
+
+    if request.method == 'POST':
+        update_form = StatusUpdateForm(request.POST, request.FILES)
+        if update_form.is_valid():
+            upd = OrderStatusUpdate.objects.create(
+                quote_request=quote,
+                status=update_form.cleaned_data['status'],
+                note=update_form.cleaned_data['note'],
+                attachment=update_form.cleaned_data.get('attachment'),
+                created_by=request.user,
+            )
+            _send_status_notification(quote, upd)
+            messages.success(request, _('Status update posted.'))
+            return redirect('factory_order', pk=pk)
+
+    updates = quote.status_updates.all()
+    return render(request, 'homepage/portal/factory_order.html', {
+        'quote': quote,
+        'updates': updates,
+        'update_form': update_form,
     })

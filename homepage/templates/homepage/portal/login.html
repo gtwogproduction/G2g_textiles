@@ -1,0 +1,49 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ request.LANGUAGE_CODE|default:'en' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% trans "Login" %} — G2G Textiles Portal</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="{% static 'homepage/css/portal.css' %}">
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-box">
+    <a href="{% url 'homepage' %}" class="login-box__logo">G2G <span>Textiles</span></a>
+
+    <h1>{% trans "Portal Login" %}</h1>
+    <p>{% trans "Log in to view your order status or manage production updates." %}</p>
+
+    <form method="post" action="">
+      {% csrf_token %}
+
+      <div class="login-box__field">
+        <label for="id_username">{% trans "Username" %}</label>
+        <input type="text" name="username" id="id_username" autocomplete="username" autofocus required>
+        {% if form.username.errors %}
+          <div class="login-box__error">{{ form.username.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="login-box__field">
+        <label for="id_password">{% trans "Password" %}</label>
+        <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+        {% if form.password.errors %}
+          <div class="login-box__error">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="login-box__error">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      <button type="submit" class="login-box__submit">{% trans "Log in" %}</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
