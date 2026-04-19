@@ -129,4 +129,4 @@ QUOTE_NOTIFICATION_EMAIL = 'production@gtwog.ch'
 # --- Auth ---
 LOGIN_URL = '/en/portal/login/'
 LOGIN_REDIRECT_URL = '/en/portal/'
-LOGOUT_REDIRECT_URL = '/en/'
+LOGOUT_REDIRECT_URL = '/en/portal/login/'
