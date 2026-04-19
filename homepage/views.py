@@ -364,6 +364,142 @@ def _is_factory_user(user):
     return user.groups.filter(name='factory').exists()
 
 
+_STATUS_BADGE_COLOURS = {
+    'quote_received':  ('rgba(0,0,0,0.06)',      '#6b6760'),
+    'in_review':       ('rgba(180,130,0,0.12)',   '#6b4e00'),
+    'quote_sent':      ('rgba(180,130,0,0.12)',   '#6b4e00'),
+    'sampling':        ('rgba(0,80,180,0.10)',    '#003580'),
+    'sample_approved': ('rgba(40,120,80,0.12)',   '#1e5c3a'),
+    'in_production':   ('rgba(0,80,180,0.10)',    '#003580'),
+    'quality_check':   ('rgba(180,130,0,0.12)',   '#6b4e00'),
+    'shipped':         ('rgba(40,120,80,0.12)',   '#1e5c3a'),
+    'delivered':       ('rgba(40,120,80,0.18)',   '#174d30'),
+}
+
+
+def _build_status_notification_html(first_name, order_name, status_label, status_key,
+                                     date_str, note, portal_url):
+    bg, fg = _STATUS_BADGE_COLOURS.get(status_key, ('rgba(0,0,0,0.06)', '#6b6760'))
+
+    note_block = ""
+    if note:
+        note_block = f"""
+        <tr><td style="padding:0 40px 24px">
+          <div style="background:#f5f2ee;border-left:3px solid #1a1a1a;padding:14px 18px;
+                      border-radius:0 4px 4px 0;font-size:14px;line-height:1.6;color:#1a1a1a">
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;
+                        text-transform:uppercase;color:#6b6760;margin-bottom:6px">
+              Note from production
+            </div>
+            {note}
+          </div>
+        </td></tr>"""
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Order Update</title>
+</head>
+<body style="margin:0;padding:0;background:#edeae4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#edeae4;padding:40px 20px">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px">
+
+  <!-- Logo header -->
+  <tr><td style="background:#1a1a1a;padding:24px 40px;border-radius:4px 4px 0 0">
+    <span style="font-family:Arial,sans-serif;font-size:20px;font-weight:900;
+                 letter-spacing:0.18em;text-transform:uppercase;color:#f5f2ee;
+                 text-decoration:none">
+      G2G <span style="opacity:0.55">TEXTILES</span>
+    </span>
+  </td></tr>
+
+  <!-- Body card -->
+  <tr><td style="background:#ffffff;border-radius:0 0 4px 4px;overflow:hidden">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+
+      <!-- Greeting -->
+      <tr><td style="padding:36px 40px 8px">
+        <p style="margin:0;font-size:22px;font-weight:600;color:#1a1a1a;line-height:1.2">
+          Hi {first_name},
+        </p>
+      </td></tr>
+
+      <!-- Intro -->
+      <tr><td style="padding:12px 40px 24px">
+        <p style="margin:0;font-size:15px;color:#6b6760;line-height:1.6">
+          There is a new update on your order for
+          <strong style="color:#1a1a1a">{order_name}</strong>.
+        </p>
+      </td></tr>
+
+      <!-- Status + date row -->
+      <tr><td style="padding:0 40px 28px">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right:20px">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;
+                          text-transform:uppercase;color:#6b6760;margin-bottom:6px">Status</div>
+              <span style="display:inline-block;background:{bg};color:{fg};
+                           font-size:11px;font-weight:700;letter-spacing:0.06em;
+                           text-transform:uppercase;padding:4px 10px;border-radius:2px">
+                {status_label}
+              </span>
+            </td>
+            <td>
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;
+                          text-transform:uppercase;color:#6b6760;margin-bottom:6px">Date</div>
+              <span style="font-size:14px;color:#1a1a1a">{date_str}</span>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <!-- Optional note -->
+      {note_block}
+
+      <!-- Divider -->
+      <tr><td style="padding:0 40px">
+        <div style="border-top:1px solid rgba(0,0,0,0.08)"></div>
+      </td></tr>
+
+      <!-- CTA -->
+      <tr><td style="padding:28px 40px 36px">
+        <p style="margin:0 0 18px;font-size:14px;color:#6b6760;line-height:1.6">
+          Log in to your portal to view the full timeline for this order.
+        </p>
+        <a href="{portal_url}"
+           style="display:inline-block;background:#1a1a1a;color:#ffffff;
+                  font-size:13px;font-weight:600;letter-spacing:0.04em;
+                  text-decoration:none;padding:12px 24px;border-radius:4px">
+          View Order Status &rarr;
+        </a>
+      </td></tr>
+
+    </table>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding:24px 0 0;text-align:center">
+    <p style="margin:0;font-size:12px;color:#6b6760;line-height:1.8">
+      G2G Textiles &nbsp;&middot;&nbsp; production@gtwog.ch<br>
+      <a href="{portal_url}" style="color:#6b6760;font-size:11px">
+        Manage email preferences
+      </a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+
+</body>
+</html>"""
+
+
 def _send_status_notification(quote, update):
     if not quote.customer or not quote.customer.email:
         return
@@ -378,29 +514,28 @@ def _send_status_notification(quote, update):
     )
     order_name = quote.company_name or quote.contact_name
     portal_url = "https://gtwog.ch/en/portal/customer/" + str(quote.pk) + "/"
-    subject = f"Order Update: {update.get_status_display()} — G2G Textiles"
-
-    note_block_text = f"\nNote from production:\n{update.note}\n" if update.note else ""
-    note_block_html = f"<p><strong>Note from production:</strong><br>{update.note}</p>" if update.note else ""
+    status_label = update.get_status_display()
+    date_str = update.created_at.strftime('%d %b %Y')
+    subject = f"Order Update: {status_label} — G2G Textiles"
 
     plain = (
         f"Hi {first_name},\n\n"
         f"There is a new update on your order for {order_name}.\n\n"
-        f"Status: {update.get_status_display()}\n"
-        f"Date:   {update.created_at.strftime('%d %b %Y')}\n"
-        f"{note_block_text}\n"
-        f"Log in to your portal to view your full order history:\n{portal_url}\n\n"
+        f"Status: {status_label}\n"
+        f"Date:   {date_str}\n"
+        + (f"\nNote from production:\n{update.note}\n" if update.note else "")
+        + f"\nView your order: {portal_url}\n\n"
         f"Best regards,\nThe G2G Textiles Team\nproduction@gtwog.ch"
     )
 
-    html = (
-        f"<p>Hi {first_name},</p>"
-        f"<p>There is a new update on your order for <strong>{order_name}</strong>.</p>"
-        f"<p><strong>Status:</strong> {update.get_status_display()}<br>"
-        f"<strong>Date:</strong> {update.created_at.strftime('%d %b %Y')}</p>"
-        f"{note_block_html}"
-        f"<p><a href='{portal_url}'>View your full order history</a></p>"
-        f"<p>Best regards,<br>The G2G Textiles Team<br>production@gtwog.ch</p>"
+    html = _build_status_notification_html(
+        first_name=first_name,
+        order_name=order_name,
+        status_label=status_label,
+        status_key=update.status,
+        date_str=date_str,
+        note=update.note,
+        portal_url=portal_url,
     )
 
     try:
