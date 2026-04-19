@@ -19,7 +19,7 @@ class OrderStatusUpdateInline(admin.TabularInline):
     model = OrderStatusUpdate
     extra = 0
     readonly_fields = ['created_by', 'created_at']
-    fields = ['status', 'note', 'attachment', 'created_by', 'created_at']
+    fields = ['status', 'update_type', 'note', 'attachment', 'tracking_number', 'tracking_url', 'created_by', 'created_at']
 
 
 @admin.register(QuoteRequest)

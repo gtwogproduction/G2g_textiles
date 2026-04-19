@@ -402,3 +402,24 @@ msgstr "Statusupdate gepostet."
 
 msgid "Factory assigned."
 msgstr "Fabrik zugewiesen."
+
+msgid "Status Update"
+msgstr "Statusupdate"
+
+msgid "Delay / Issue"
+msgstr "Verzögerung / Problem"
+
+msgid "This will be flagged as a delay in the customer's timeline."
+msgstr "Dies wird als Verzögerung in der Kundenzeitleiste markiert."
+
+msgid "Tracking Number"
+msgstr "Sendungsnummer"
+
+msgid "Tracking Link"
+msgstr "Tracking-Link"
+
+msgid "Track your shipment"
+msgstr "Sendung verfolgen"
+
+msgid "Leave blank if not yet available."
+msgstr "Leer lassen, falls noch nicht verfügbar."

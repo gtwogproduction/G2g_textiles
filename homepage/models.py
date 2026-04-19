@@ -227,10 +227,18 @@ class OrderStatusUpdate(models.Model):
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
     ]
+    UPDATE_TYPE_CHOICES = [
+        ('update', 'Status Update'),
+        ('issue',  'Delay / Issue'),
+    ]
+
     quote_request = models.ForeignKey(QuoteRequest, on_delete=models.CASCADE, related_name='status_updates')
     status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    update_type = models.CharField(max_length=10, choices=UPDATE_TYPE_CHOICES, default='update')
     note = models.TextField(blank=True)
     attachment = models.FileField(upload_to='status_updates/', blank=True, null=True)
+    tracking_number = models.CharField(max_length=100, blank=True)
+    tracking_url = models.URLField(blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
         related_name='status_updates_created'

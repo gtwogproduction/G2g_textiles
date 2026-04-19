@@ -39,13 +39,22 @@
       {% if updates %}
         <div class="timeline">
           {% for u in updates %}
-            <div class="timeline-entry">
+            <div class="timeline-entry{% if u.update_type == 'issue' %} timeline-entry--issue{% endif %}">
               <div class="timeline-entry__meta">
                 <span class="status-badge status-badge--{{ u.status }}">{{ u.get_status_display }}</span>
+                {% if u.update_type == 'issue' %}
+                  <span class="status-badge status-badge--issue">&#9888; {% trans "Delay / Issue" %}</span>
+                {% endif %}
                 <span class="timeline-entry__date">{{ u.created_at|date:"d M Y" }}</span>
               </div>
               {% if u.note %}
                 <div class="timeline-entry__note">{{ u.note|linebreaksbr }}</div>
+              {% endif %}
+              {% if u.tracking_url %}
+                <div class="timeline-entry__tracking">
+                  <a href="{{ u.tracking_url }}" target="_blank" rel="noopener" class="tracking-link">{% trans "Track your shipment" %} &rarr;</a>
+                  {% if u.tracking_number %}<span class="tracking-number">{{ u.tracking_number }}</span>{% endif %}
+                </div>
               {% endif %}
               {% if u.attachment %}
                 <div class="timeline-entry__attachment">
@@ -65,8 +74,22 @@
   <div>
     <div class="portal-card">
       <h2>{% trans "Post Status Update" %}</h2>
-      <form method="post" enctype="multipart/form-data" class="portal-form">
+      <form method="post" enctype="multipart/form-data" class="portal-form" id="factory-update-form">
         {% csrf_token %}
+
+        <!-- Update type toggle -->
+        <div class="update-type-toggle">
+          <label class="update-type-option">
+            <input type="radio" name="update_type" value="update" checked>
+            <span>{% trans "Status Update" %}</span>
+          </label>
+          <label class="update-type-option update-type-option--issue">
+            <input type="radio" name="update_type" value="issue">
+            <span>&#9888; {% trans "Delay / Issue" %}</span>
+          </label>
+        </div>
+        <p id="factory-issue-hint" class="issue-hint" style="display:none">{% trans "This will be flagged as a delay in the customer's timeline." %}</p>
+
         <div>
           <label>{% trans "Status" %}</label>
           {{ update_form.status }}
@@ -79,10 +102,30 @@
           <label>{% trans "Attachment" %} <small style="color:var(--muted);font-weight:300">({% trans "optional" %})</small></label>
           {{ update_form.attachment }}
         </div>
+        <div>
+          <label>{% trans "Tracking Number" %} <small style="color:var(--muted);font-weight:300">({% trans "optional" %})</small></label>
+          {{ update_form.tracking_number }}
+        </div>
+        <div>
+          <label>{% trans "Tracking Link" %} <small style="color:var(--muted);font-weight:300">({% trans "optional" %})</small></label>
+          {{ update_form.tracking_url }}
+          <small style="color:var(--muted);font-size:0.8rem">{% trans "Leave blank if not yet available." %}</small>
+        </div>
         <button type="submit" class="btn btn--primary">{% trans "Post Update" %}</button>
       </form>
     </div>
   </div>
 
 </div>
+<script>
+(function(){
+  var radios = document.querySelectorAll('#factory-update-form input[name="update_type"]');
+  var hint = document.getElementById('factory-issue-hint');
+  radios.forEach(function(r){
+    r.addEventListener('change', function(){
+      hint.style.display = this.value === 'issue' ? 'block' : 'none';
+    });
+  });
+})();
+</script>
 {% endblock %}

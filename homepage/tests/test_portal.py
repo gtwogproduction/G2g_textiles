@@ -231,6 +231,7 @@ class StaffStatusUpdateTests(PortalTestCase):
         """WHEN post_update is submitted SHOULD create one OrderStatusUpdate for the quote."""
         payload = {
             'post_update': '1',
+            'update_type': 'update',
             'status': 'in_review',
             'note': 'We are looking into your order.',
         }
@@ -241,6 +242,18 @@ class StaffStatusUpdateTests(PortalTestCase):
         update = OrderStatusUpdate.objects.get(quote_request=self.quote)
         self.assertEqual(update.status, 'in_review')
         self.assertEqual(update.created_by, self.staff)
+
+    def test_post_issue_creates_update_with_issue_type(self):
+        """WHEN post_update is submitted with update_type=issue SHOULD set update_type to issue."""
+        payload = {
+            'post_update': '1',
+            'update_type': 'issue',
+            'status': 'in_production',
+            'note': 'Fabric delayed at customs.',
+        }
+        self.client.post(staff_order_url(self.quote.pk), payload)
+        update = OrderStatusUpdate.objects.get(quote_request=self.quote)
+        self.assertEqual(update.update_type, 'issue')
 
 
 class StaffAssignFactoryTests(PortalTestCase):
@@ -276,6 +289,7 @@ class FactoryStatusUpdateTests(PortalTestCase):
     def test_post_creates_order_status_update(self):
         """WHEN a valid status form is POSTed SHOULD create one OrderStatusUpdate."""
         payload = {
+            'update_type': 'update',
             'status': 'in_production',
             'note': 'Production started today.',
         }
@@ -285,6 +299,17 @@ class FactoryStatusUpdateTests(PortalTestCase):
         update = OrderStatusUpdate.objects.get(quote_request=self.quote)
         self.assertEqual(update.status, 'in_production')
         self.assertEqual(update.created_by, self.factory)
+
+    def test_post_issue_creates_update_with_issue_type(self):
+        """WHEN a factory posts with update_type=issue SHOULD set update_type to issue."""
+        payload = {
+            'update_type': 'issue',
+            'status': 'in_production',
+            'note': 'Machine breakdown, 3-day delay.',
+        }
+        self.client.post(factory_order_url(self.quote.pk), payload)
+        update = OrderStatusUpdate.objects.get(quote_request=self.quote)
+        self.assertEqual(update.update_type, 'issue')
 
 
 class CustomerBlockedFromStaffViewsTests(PortalTestCase):

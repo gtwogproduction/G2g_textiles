@@ -55,13 +55,22 @@
 {% if updates %}
     <div class="timeline">
       {% for u in updates %}
-        <div class="timeline-entry">
+        <div class="timeline-entry{% if u.update_type == 'issue' %} timeline-entry--issue{% endif %}">
           <div class="timeline-entry__meta">
             <span class="status-badge status-badge--{{ u.status }}">{{ u.get_status_display }}</span>
+            {% if u.update_type == 'issue' %}
+              <span class="status-badge status-badge--issue">&#9888; {% trans "Delay / Issue" %}</span>
+            {% endif %}
             <span class="timeline-entry__date">{{ u.created_at|date:"d M Y" }}</span>
           </div>
           {% if u.note %}
             <div class="timeline-entry__note">{{ u.note|linebreaksbr }}</div>
+          {% endif %}
+          {% if u.tracking_url %}
+            <div class="timeline-entry__tracking">
+              <a href="{{ u.tracking_url }}" target="_blank" rel="noopener" class="tracking-link">{% trans "Track your shipment" %} &rarr;</a>
+              {% if u.tracking_number %}<span class="tracking-number">{{ u.tracking_number }}</span>{% endif %}
+            </div>
           {% endif %}
           {% if u.attachment %}
             <div class="timeline-entry__attachment">

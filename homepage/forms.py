@@ -145,12 +145,22 @@ class QuoteStep5Form(forms.Form):
 
 
 class StatusUpdateForm(forms.Form):
+    update_type = forms.ChoiceField(
+        choices=OrderStatusUpdate.UPDATE_TYPE_CHOICES,
+        widget=forms.RadioSelect,
+        initial='update',
+    )
     status = forms.ChoiceField(choices=OrderStatusUpdate.STATUS_CHOICES)
     note = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Add a note for the customer (optional)'})
+        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Describe the update or explain the delay'})
     )
     attachment = forms.FileField(required=False)
+    tracking_number = forms.CharField(required=False, max_length=100,
+        widget=forms.TextInput(attrs={'placeholder': 'e.g. 1Z999AA10123456784'}))
+    tracking_url = forms.URLField(required=False,
+        widget=forms.URLInput(attrs={'placeholder': 'https://track.carrier.com/...'}))
+
 
 
 class FactoryAssignForm(forms.Form):

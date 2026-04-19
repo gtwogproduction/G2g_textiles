@@ -378,22 +378,54 @@ _STATUS_BADGE_COLOURS = {
 
 
 def _build_status_notification_html(first_name, order_name, status_label, status_key,
-                                     date_str, note, portal_url):
+                                     date_str, note, portal_url,
+                                     update_type='update', tracking_number='', tracking_url=''):
     bg, fg = _STATUS_BADGE_COLOURS.get(status_key, ('rgba(0,0,0,0.06)', '#6b6760'))
+
+    is_issue = (update_type == 'issue')
+    header_colour = '#b87a00' if is_issue else '#1a1a1a'
+    intro_text = (
+        'There is an issue or delay on your order for'
+        if is_issue else
+        'There is a new update on your order for'
+    )
+    note_label = 'What happened' if is_issue else 'Note from production'
 
     note_block = ""
     if note:
+        border_colour = '#b87a00' if is_issue else '#1a1a1a'
         note_block = f"""
         <tr><td style="padding:0 40px 24px">
-          <div style="background:#f5f2ee;border-left:3px solid #1a1a1a;padding:14px 18px;
+          <div style="background:#f5f2ee;border-left:3px solid {border_colour};padding:14px 18px;
                       border-radius:0 4px 4px 0;font-size:14px;line-height:1.6;color:#1a1a1a">
             <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;
                         text-transform:uppercase;color:#6b6760;margin-bottom:6px">
-              Note from production
+              {note_label}
             </div>
             {note}
           </div>
         </td></tr>"""
+
+    tracking_block = ""
+    if tracking_url:
+        tn_text = f'<div style="margin-top:8px;font-size:12px;color:#6b6760">Tracking number: {tracking_number}</div>' if tracking_number else ''
+        tracking_block = f"""
+      <tr><td style="padding:0 40px 24px">
+        <div style="background:#f0f7f2;border-left:3px solid #1e5c3a;padding:14px 18px;
+                    border-radius:0 4px 4px 0">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;
+                      text-transform:uppercase;color:#6b6760;margin-bottom:8px">
+            Shipment tracking
+          </div>
+          <a href="{tracking_url}"
+             style="display:inline-block;background:#1e5c3a;color:#ffffff;
+                    font-size:13px;font-weight:600;letter-spacing:0.04em;
+                    text-decoration:none;padding:10px 20px;border-radius:4px">
+            Track your shipment &rarr;
+          </a>
+          {tn_text}
+        </div>
+      </td></tr>"""
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -409,7 +441,7 @@ def _build_status_notification_html(first_name, order_name, status_label, status
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px">
 
   <!-- Logo header -->
-  <tr><td style="background:#1a1a1a;padding:24px 40px;border-radius:4px 4px 0 0">
+  <tr><td style="background:{header_colour};padding:24px 40px;border-radius:4px 4px 0 0">
     <span style="font-family:Arial,sans-serif;font-size:20px;font-weight:900;
                  letter-spacing:0.18em;text-transform:uppercase;color:#f5f2ee;
                  text-decoration:none">
@@ -431,7 +463,7 @@ def _build_status_notification_html(first_name, order_name, status_label, status
       <!-- Intro -->
       <tr><td style="padding:12px 40px 24px">
         <p style="margin:0;font-size:15px;color:#6b6760;line-height:1.6">
-          There is a new update on your order for
+          {intro_text}
           <strong style="color:#1a1a1a">{order_name}</strong>.
         </p>
       </td></tr>
@@ -460,6 +492,9 @@ def _build_status_notification_html(first_name, order_name, status_label, status
 
       <!-- Optional note -->
       {note_block}
+
+      <!-- Optional tracking -->
+      {tracking_block}
 
       <!-- Divider -->
       <tr><td style="padding:0 40px">
@@ -516,14 +551,27 @@ def _send_status_notification(quote, update):
     portal_url = "https://gtwog.ch/en/portal/customer/" + str(quote.pk) + "/"
     status_label = update.get_status_display()
     date_str = update.created_at.strftime('%d %b %Y')
-    subject = f"Order Update: {status_label} — G2G Textiles"
+    is_issue = (update.update_type == 'issue')
+    subject = (
+        f"\u26a0 Delay on your order \u2014 G2G Textiles"
+        if is_issue else
+        f"Order Update: {status_label} \u2014 G2G Textiles"
+    )
+
+    note_label = "What happened" if is_issue else "Note from production"
+    intro_text = (
+        "There is an issue or delay on your order for"
+        if is_issue else
+        "There is a new update on your order for"
+    )
 
     plain = (
         f"Hi {first_name},\n\n"
-        f"There is a new update on your order for {order_name}.\n\n"
+        f"{intro_text} {order_name}.\n\n"
         f"Status: {status_label}\n"
         f"Date:   {date_str}\n"
-        + (f"\nNote from production:\n{update.note}\n" if update.note else "")
+        + (f"\n{note_label}:\n{update.note}\n" if update.note else "")
+        + (f"\nTrack your shipment: {update.tracking_url}\n" if update.tracking_url else "")
         + f"\nView your order: {portal_url}\n\n"
         f"Best regards,\nThe G2G Textiles Team\nproduction@gtwog.ch"
     )
@@ -536,6 +584,9 @@ def _send_status_notification(quote, update):
         date_str=date_str,
         note=update.note,
         portal_url=portal_url,
+        update_type=update.update_type,
+        tracking_number=update.tracking_number,
+        tracking_url=update.tracking_url,
     )
 
     try:
@@ -651,8 +702,11 @@ def staff_order(request, pk):
                 upd = OrderStatusUpdate.objects.create(
                     quote_request=quote,
                     status=update_form.cleaned_data['status'],
+                    update_type=update_form.cleaned_data['update_type'],
                     note=update_form.cleaned_data['note'],
                     attachment=update_form.cleaned_data.get('attachment'),
+                    tracking_number=update_form.cleaned_data.get('tracking_number', ''),
+                    tracking_url=update_form.cleaned_data.get('tracking_url', ''),
                     created_by=request.user,
                 )
                 _send_status_notification(quote, upd)
@@ -700,8 +754,11 @@ def factory_order(request, pk):
             upd = OrderStatusUpdate.objects.create(
                 quote_request=quote,
                 status=update_form.cleaned_data['status'],
+                update_type=update_form.cleaned_data['update_type'],
                 note=update_form.cleaned_data['note'],
                 attachment=update_form.cleaned_data.get('attachment'),
+                tracking_number=update_form.cleaned_data.get('tracking_number', ''),
+                tracking_url=update_form.cleaned_data.get('tracking_url', ''),
                 created_by=request.user,
             )
             _send_status_notification(quote, upd)
