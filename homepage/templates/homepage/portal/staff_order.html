@@ -153,6 +153,23 @@
       </form>
     </div>
 
+    <!-- Payment confirmation -->
+    <div class="portal-card">
+      <h2>{% trans "Payment" %}</h2>
+      {% if quote.payment_confirmed %}
+        <span class="status-badge status-badge--quote-accepted" style="margin-bottom:0.75rem;display:inline-block">&#10003; {% trans "Payment Confirmed" %}</span>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.75rem">{% trans "The factory can now see and act on this order." %}</p>
+      {% else %}
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.75rem">{% trans "Confirm payment to make this order visible to the assigned factory." %}</p>
+      {% endif %}
+      <form method="post" class="portal-form">
+        {% csrf_token %}
+        <button type="submit" name="toggle_payment" class="btn {% if quote.payment_confirmed %}btn--ghost{% else %}btn--primary{% endif %}">
+          {% if quote.payment_confirmed %}{% trans "Remove Payment Confirmation" %}{% else %}{% trans "Confirm Payment Received" %}{% endif %}
+        </button>
+      </form>
+    </div>
+
     <!-- Quote -->
     <div class="portal-card">
       <h2>{% trans "Quote" %}</h2>

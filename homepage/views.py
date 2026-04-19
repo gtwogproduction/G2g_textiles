@@ -643,7 +643,8 @@ def _send_status_notification(quote, update):
 
 def _build_quote_notification_html(first_name, order_name, quote_number,
                                     line_items, total, currency,
-                                    valid_until_str, notes_customer, portal_url):
+                                    valid_until_str, notes_customer, portal_url,
+                                    email_body='', tech_pack_url=''):
     rows = ""
     for item in line_items:
         disc = f" (–{item.discount_pct}%)" if item.discount_pct else ""
@@ -669,12 +670,41 @@ def _build_quote_notification_html(first_name, order_name, quote_number,
 
     valid_block = f'<span style="font-size:13px;color:#6b6760">Valid until: <strong style="color:#1a1a1a">{valid_until_str}</strong></span>' if valid_until_str else ""
 
+    import html as _html
+    email_body_html = "<br>".join(
+        f'<span style="display:block;margin-bottom:8px">{_html.escape(para)}</span>'
+        for para in (email_body or '').strip().split('\n\n')
+        if para.strip()
+    ) or 'Please find your proforma invoice below.'
+
+    tech_pack_block = ""
+    if tech_pack_url:
+        tech_pack_block = f"""
+      <tr><td style="padding:0 40px 24px">
+        <div style="background:#f5f2ee;border-left:3px solid #1a1a1a;padding:14px 18px;
+                    border-radius:0 4px 4px 0">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;
+                      text-transform:uppercase;color:#6b6760;margin-bottom:8px">
+            Tech Pack Template
+          </div>
+          <p style="margin:0 0 10px;font-size:13px;color:#6b6760;line-height:1.5">
+            Please fill in the template below for each style and send it back with your order confirmation.
+          </p>
+          <a href="{tech_pack_url}"
+             style="display:inline-block;background:#1a1a1a;color:#ffffff;
+                    font-size:13px;font-weight:600;letter-spacing:0.04em;
+                    text-decoration:none;padding:10px 20px;border-radius:4px">
+            Download Tech Pack Template &darr;
+          </a>
+        </div>
+      </td></tr>"""
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Your Quote</title>
+  <title>Proforma Invoice</title>
 </head>
 <body style="margin:0;padding:0;background:#edeae4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#edeae4;padding:40px 20px">
@@ -691,13 +721,17 @@ def _build_quote_notification_html(first_name, order_name, quote_number,
       <tr><td style="padding:36px 40px 8px">
         <p style="margin:0;font-size:22px;font-weight:600;color:#1a1a1a">Hi {first_name},</p>
       </td></tr>
-      <tr><td style="padding:12px 40px 24px">
+      <tr><td style="padding:12px 40px 4px">
         <p style="margin:0;font-size:15px;color:#6b6760;line-height:1.6">
-          Your quote for <strong style="color:#1a1a1a">{order_name}</strong> is ready.
-          Reference: <strong style="color:#1a1a1a">{quote_number}</strong>
+          {email_body_html}
         </p>
       </td></tr>
-      <tr><td style="padding:0 40px 28px">
+      <tr><td style="padding:8px 40px 4px">
+        <p style="margin:0;font-size:13px;color:#6b6760;line-height:1.5">
+          Proforma Invoice for <strong style="color:#1a1a1a">{order_name}</strong> &mdash; Ref: <strong style="color:#1a1a1a">{quote_number}</strong>
+        </p>
+      </td></tr>
+      <tr><td style="padding:8px 40px 28px">
         <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #edeae4;border-radius:4px;overflow:hidden">
           <thead>
             <tr style="background:#f5f2ee">
@@ -717,19 +751,20 @@ def _build_quote_notification_html(first_name, order_name, quote_number,
         </table>
       </td></tr>
       {notes_block}
+      {tech_pack_block}
       <tr><td style="padding:0 40px">
         <div style="border-top:1px solid rgba(0,0,0,0.08)"></div>
       </td></tr>
       <tr><td style="padding:28px 40px 8px">{valid_block}</td></tr>
       <tr><td style="padding:12px 40px 36px">
         <p style="margin:0 0 18px;font-size:14px;color:#6b6760;line-height:1.6">
-          Log in to your portal to view the full quote details.
+          Log in to your portal to view the full invoice details.
         </p>
         <a href="{portal_url}"
            style="display:inline-block;background:#1a1a1a;color:#ffffff;
                   font-size:13px;font-weight:600;letter-spacing:0.04em;
                   text-decoration:none;padding:12px 24px;border-radius:4px">
-          View Quote &rarr;
+          View Proforma Invoice &rarr;
         </a>
       </td></tr>
     </table>
@@ -746,7 +781,21 @@ def _build_quote_notification_html(first_name, order_name, quote_number,
 </html>"""
 
 
-def _send_quote_notification(quote):
+DEFAULT_PROFORMA_EMAIL_BODY = (
+    "Dear {first_name},\n\n"
+    "Thank you for your interest in G2G Textiles. Please find your proforma invoice below — "
+    "this outlines an estimate of what your order will cost based on the details you provided.\n\n"
+    "If you are happy with this quote and would like to proceed, please get in touch with us at "
+    "production@gtwog.ch referencing your invoice number. To move into production we will need "
+    "a completed tech pack for each style. Please find our standard tech pack template attached — "
+    "fill it in and send it back along with your confirmation.\n\n"
+    "If you have any questions or would like to adjust anything, don't hesitate to reach out. "
+    "We look forward to working with you.\n\n"
+    "Kind regards,\nThe G2G Textiles Team\nproduction@gtwog.ch"
+)
+
+
+def _send_quote_notification(quote, email_body=''):
     if not quote.quote_request.customer or not quote.quote_request.customer.email:
         return
     from django.core.mail import send_mail
@@ -757,15 +806,24 @@ def _send_quote_notification(quote):
         qr.customer.first_name
         or (qr.contact_name.split()[0] if qr.contact_name else 'there')
     )
+    if not email_body:
+        email_body = DEFAULT_PROFORMA_EMAIL_BODY.format(first_name=first_name)
     order_name = qr.company_name or qr.contact_name
     portal_url = f"https://gtwog.ch/en/portal/customer/{qr.pk}/quote/"
     line_items = list(quote.line_items.all())
     valid_str = quote.valid_until.strftime('%d %b %Y') if quote.valid_until else ''
 
-    subject = f"Your Quote {quote.quote_number} — G2G Textiles"
+    from .models import SiteSettings
+    try:
+        tech_pack_url = SiteSettings.objects.first().tech_pack_template.url if SiteSettings.objects.exists() and SiteSettings.objects.first().tech_pack_template else ''
+    except Exception:
+        tech_pack_url = ''
+
+    subject = f"Proforma Invoice {quote.quote_number} — G2G Textiles"
     plain = (
         f"Hi {first_name},\n\n"
-        f"Your quote {quote.quote_number} for {order_name} is ready.\n\n"
+        f"{email_body}\n\n"
+        f"Proforma Invoice {quote.quote_number} for {order_name}:\n\n"
         + "\n".join(
             f"- {item.description}: {item.quantity} × {quote.currency} {item.unit_price} = {quote.currency} {item.subtotal}"
             for item in line_items
@@ -773,7 +831,8 @@ def _send_quote_notification(quote):
         + f"\n\nTotal: {quote.currency} {quote.total}"
         + (f"\nValid until: {valid_str}" if valid_str else "")
         + (f"\n\n{quote.notes_customer}" if quote.notes_customer else "")
-        + f"\n\nView your quote: {portal_url}\n\nBest regards,\nThe G2G Textiles Team"
+        + (f"\n\nDownload tech pack template: {tech_pack_url}" if tech_pack_url else "")
+        + f"\n\nView invoice: {portal_url}\n\nBest regards,\nThe G2G Textiles Team\nproduction@gtwog.ch"
     )
     html = _build_quote_notification_html(
         first_name=first_name,
@@ -785,6 +844,8 @@ def _send_quote_notification(quote):
         valid_until_str=valid_str,
         notes_customer=quote.notes_customer,
         portal_url=portal_url,
+        email_body=email_body,
+        tech_pack_url=tech_pack_url,
     )
     try:
         send_mail(
@@ -935,6 +996,14 @@ def staff_order(request, pk):
                 quote.save(update_fields=['assigned_factory'])
                 messages.success(request, _('Factory assigned.'))
                 return redirect('staff_order', pk=pk)
+        elif 'toggle_payment' in request.POST:
+            quote.payment_confirmed = not quote.payment_confirmed
+            quote.save(update_fields=['payment_confirmed'])
+            if quote.payment_confirmed:
+                messages.success(request, _('Payment confirmed. Factory can now see this order.'))
+            else:
+                messages.success(request, _('Payment confirmation removed.'))
+            return redirect('staff_order', pk=pk)
 
     updates = quote.status_updates.all()
     return render(request, 'homepage/portal/staff_order.html', {
@@ -955,7 +1024,7 @@ def staff_order(request, pk):
 def factory_dashboard(request):
     if not _is_factory_user(request.user):
         return redirect('portal_home')
-    quotes = QuoteRequest.objects.filter(assigned_factory=request.user).order_by('-submitted_at')
+    quotes = QuoteRequest.objects.filter(assigned_factory=request.user, payment_confirmed=True).order_by('-submitted_at')
     return render(request, 'homepage/portal/factory_dashboard.html', {'quotes': quotes})
 
 
@@ -964,7 +1033,7 @@ def factory_order(request, pk):
     if not _is_factory_user(request.user):
         return redirect('portal_home')
     try:
-        quote = QuoteRequest.objects.get(pk=pk, assigned_factory=request.user)
+        quote = QuoteRequest.objects.get(pk=pk, assigned_factory=request.user, payment_confirmed=True)
     except QuoteRequest.DoesNotExist:
         raise Http404
 
@@ -1062,12 +1131,18 @@ def staff_create_quote(request, pk):
         initial = suggested if suggested else [{}]
         formset = QuoteLineItemFormSet(initial=initial)
 
+    from .models import SiteSettings
+    settings_obj = SiteSettings.objects.first()
+    tech_pack_url = settings_obj.tech_pack_template.url if settings_obj and settings_obj.tech_pack_template else ''
+    customer_name = (quote_request.contact_name or '').split()[0] or 'there'
     return render(request, 'homepage/portal/staff_quote_edit.html', {
         'quote_request': quote_request,
         'header_form': header_form,
         'formset': formset,
         'quote_obj': None,
         'is_create': True,
+        'default_email_body': DEFAULT_PROFORMA_EMAIL_BODY.format(first_name=customer_name),
+        'tech_pack_url': tech_pack_url,
     })
 
 
@@ -1092,12 +1167,19 @@ def staff_quote_edit(request, quote_pk):
         header_form = QuoteHeaderForm(instance=quote)
         formset = QuoteLineItemFormSet(instance=quote)
 
+    from .models import SiteSettings
+    settings_obj = SiteSettings.objects.first()
+    tech_pack_url = settings_obj.tech_pack_template.url if settings_obj and settings_obj.tech_pack_template else ''
+    qr = quote.quote_request
+    customer_name = (qr.contact_name or '').split()[0] or 'there'
     return render(request, 'homepage/portal/staff_quote_edit.html', {
-        'quote_request': quote.quote_request,
+        'quote_request': qr,
         'header_form': header_form,
         'formset': formset,
         'quote_obj': quote,
         'is_create': False,
+        'default_email_body': DEFAULT_PROFORMA_EMAIL_BODY.format(first_name=customer_name),
+        'tech_pack_url': tech_pack_url,
     })
 
 
@@ -1111,9 +1193,10 @@ def staff_quote_send(request, quote_pk):
         quote = Quote.objects.get(pk=quote_pk)
     except Quote.DoesNotExist:
         raise Http404
+    email_body = request.POST.get('email_body', '').strip()
     quote.status = 'sent'
     quote.save(update_fields=['status', 'updated_at'])
-    _send_quote_notification(quote)
+    _send_quote_notification(quote, email_body=email_body)
     messages.success(request, _('Quote sent to customer.'))
     return redirect('staff_quote_edit', quote_pk=quote_pk)
 

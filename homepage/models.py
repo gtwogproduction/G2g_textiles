@@ -207,6 +207,10 @@ class QuoteRequest(models.Model):
         default=True,
         help_text='Send the customer an email when a new status update is posted.'
     )
+    payment_confirmed = models.BooleanField(
+        default=False,
+        help_text='Mark once the customer has paid. The factory only sees this order after payment is confirmed.'
+    )
 
     def __str__(self):
         return f"{self.company_name} — {self.contact_name} ({self.submitted_at.strftime('%d %b %Y')})"
@@ -388,6 +392,12 @@ class SiteSettings(models.Model):
     meta_description_de = models.TextField(max_length=160, blank=True, default='Hochwertige Individualkleidung für Unternehmen, Vereine und Marken. Ab 50 Stück. Kostenlose Beratung inklusive.')
     meta_og_image = models.ImageField(upload_to='meta/', blank=True, null=True)
     favicon = models.ImageField(upload_to='meta/', blank=True, null=True)
+    tech_pack_template = models.FileField(
+        upload_to='documents/',
+        blank=True,
+        null=True,
+        help_text='Standard tech pack template PDF sent with proforma invoices. Same file used for all orders.'
+    )
 
     class Meta:
         verbose_name = 'Site Settings'

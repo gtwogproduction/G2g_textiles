@@ -507,3 +507,36 @@ msgstr "Ihr Angebot"
 
 msgid "To accept this quote, reply to"
 msgstr "Um dieses Angebot anzunehmen, antworten Sie auf"
+
+msgid "To accept this invoice, reply to"
+msgstr "Um diese Rechnung anzunehmen, antworten Sie auf"
+
+msgid "Proforma Invoice"
+msgstr "Proformarechnung"
+
+msgid "Send Proforma Invoice"
+msgstr "Proformarechnung senden"
+
+msgid "Edit the email text below before sending. The proforma invoice will be included automatically."
+msgstr "Bearbeiten Sie den E-Mail-Text unten, bevor Sie senden. Die Proformarechnung wird automatisch beigefügt."
+
+msgid "Email body"
+msgstr "E-Mail-Text"
+
+msgid "Payment"
+msgstr "Zahlung"
+
+msgid "Payment Confirmed"
+msgstr "Zahlung bestätigt"
+
+msgid "Confirm Payment Received"
+msgstr "Zahlungseingang bestätigen"
+
+msgid "Remove Payment Confirmation"
+msgstr "Zahlungsbestätigung entfernen"
+
+msgid "Confirm payment to make this order visible to the assigned factory."
+msgstr "Bestätigen Sie die Zahlung, damit die zugewiesene Fabrik diese Bestellung sehen kann."
+
+msgid "The factory can now see and act on this order."
+msgstr "Die Fabrik kann diese Bestellung jetzt einsehen und bearbeiten."

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ quote.quote_number }} — G2G Textiles</title>
+  <title>Proforma Invoice {{ quote.quote_number }} — G2G Textiles</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -205,8 +205,8 @@
   <div class="print-header">
     <div class="print-logo">G2G <span>Textiles</span></div>
     <div class="print-quote-id">
-      <h2>{{ quote.quote_number }}</h2>
-      <p>{% trans "Quote" %} &mdash; {{ quote.get_status_display }}</p>
+      <h2>{% trans "Proforma Invoice" %}</h2>
+      <p>{{ quote.quote_number }} &mdash; {{ quote.get_status_display }}</p>
       {% if quote.created_at %}<p>{{ quote.created_at|date:"d F Y" }}</p>{% endif %}
     </div>
   </div>
@@ -273,7 +273,7 @@
 
   <div class="print-footer">
     <span>G2G Textiles &mdash; production@gtwog.ch &mdash; gtwog.ch</span>
-    <span>{% trans "To accept this quote, reply to" %} production@gtwog.ch</span>
+    <span>{% trans "To accept this invoice, reply to" %} production@gtwog.ch</span>
   </div>
 
 </div>

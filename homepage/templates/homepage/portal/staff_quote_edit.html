@@ -52,7 +52,7 @@
                 <input type="number" name="{{ form.discount_pct.html_name }}" value="{{ form.discount_pct.value|default:0 }}" min="0" max="100" step="0.01" class="li-discount" data-calc="disc">
               </td>
               <td class="li-subtotal">
-                <span class="row-subtotal" data-currency="{{ header_form.currency.value|default:'CHF' }}">—</span>
+                <span class="row-subtotal">—</span>
               </td>
               <td class="li-delete">
                 <label style="display:none">{{ form.DELETE }}</label>
@@ -110,12 +110,7 @@
 
       <div class="quote-actions">
         <button type="submit" name="save_draft" class="btn btn--primary">{% trans "Save Draft" %}</button>
-
         {% if quote_obj %}
-          <button type="button" class="btn btn--ghost"
-            onclick="if(confirm('{% trans "Send to Customer" %}?')){document.getElementById('send-form').submit();}">
-            {% trans "Send to Customer" %}
-          </button>
           <a href="{% url 'staff_quote_print' quote_obj.pk %}" target="_blank" class="btn btn--ghost no-print">{% trans "Print / Save as PDF" %}</a>
         {% endif %}
       </div>
@@ -136,9 +131,24 @@
 </form>
 
 {% if quote_obj %}
-<form method="post" action="{% url 'staff_quote_send' quote_obj.pk %}" id="send-form">
-  {% csrf_token %}
-</form>
+<!-- Send Proforma Invoice form — separate from the quote save form -->
+<div style="margin-top:1.5rem">
+  <div class="portal-card">
+    <h2>{% trans "Send Proforma Invoice" %}</h2>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:1rem">{% trans "Edit the email text below before sending. The proforma invoice will be included automatically." %}</p>
+    {% if tech_pack_url %}<p style="font-size:0.85rem;margin-bottom:0.75rem">Tech pack template: <a href="{{ tech_pack_url }}" target="_blank" rel="noopener" style="font-weight:500">Download</a></p>{% endif %}
+    <form method="post" action="{% url 'staff_quote_send' quote_obj.pk %}" id="send-form" class="portal-form">
+      {% csrf_token %}
+      <div>
+        <label>{% trans "Email body" %}</label>
+        <textarea name="email_body" rows="7" style="width:100%;padding:0.6rem 0.75rem;border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-body);font-size:0.9rem;font-weight:300;resize:vertical;background:var(--surface)">{{ default_email_body }}</textarea>
+      </div>
+      <div class="quote-actions" style="margin-top:1rem">
+        <button type="submit" class="btn btn--primary">{% trans "Send to Customer" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endif %}
 
 <script>
@@ -147,8 +157,8 @@
   var tbody = document.getElementById('line-item-body');
   var grandTotalEl = document.getElementById('grand-total');
 
-  function currency() {
-    var sel = document.querySelector('[name$="-currency"], select[name="currency"], #id_currency');
+  function currencyLabel() {
+    var sel = document.getElementById('id_currency');
     return (sel && sel.value) ? sel.value : 'CHF';
   }
 
@@ -160,7 +170,7 @@
   }
 
   function fmt(n) {
-    return currency() + ' ' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+    return currencyLabel() + '\u00a0' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
   }
 
   function recalc() {
@@ -178,33 +188,41 @@
     grandTotalEl.textContent = fmt(total);
   }
 
-  // Live recalc on any input change
   tbody.addEventListener('input', recalc);
   recalc();
 
-  // Add line
+  // ── Add Line ──
   document.getElementById('add-line-btn').addEventListener('click', function () {
     var idx = parseInt(totalForms.value);
-    var template = tbody.querySelector('.line-item-row');
-    var newRow = template.cloneNode(true);
-    newRow.setAttribute('data-index', idx);
 
-    newRow.querySelectorAll('input, select, textarea').forEach(function (el) {
-      var name = el.name.replace(/form-\d+-/, 'form-' + idx + '-');
-      var id   = el.id.replace(/id_form-\d+-/, 'id_form-' + idx + '-');
-      el.name = name;
-      el.id   = id;
-      if (el.type === 'checkbox') { el.checked = false; }
-      else if (el.type !== 'hidden') { el.value = el.type === 'number' ? (el.getAttribute('min') || '0') : ''; }
-    });
+    // Build a fresh row from scratch instead of cloning (avoids stale pk values)
+    var tr = document.createElement('tr');
+    tr.className = 'line-item-row';
+    tr.setAttribute('data-index', idx);
 
-    newRow.querySelector('.row-subtotal').textContent = '—';
-    tbody.appendChild(newRow);
+    var prefix = 'form-' + idx + '-';
+
+    tr.innerHTML =
+      '<td class="li-description">' +
+        '<input type="hidden" name="' + prefix + 'id" value="">' +
+        '<input type="hidden" name="' + prefix + 'order" value="' + idx + '">' +
+        '<input type="text"   name="' + prefix + 'description" class="li-description" placeholder="">' +
+      '</td>' +
+      '<td><input type="number" name="' + prefix + 'quantity"    value="1"    min="1"  class="li-qty"      data-calc="qty"></td>' +
+      '<td><input type="number" name="' + prefix + 'unit_price"  value="0.00" min="0"  step="0.01" class="li-price"   data-calc="price"></td>' +
+      '<td><input type="number" name="' + prefix + 'discount_pct" value="0"  min="0"  max="100" step="0.01" class="li-discount" data-calc="disc"></td>' +
+      '<td class="li-subtotal"><span class="row-subtotal">—</span></td>' +
+      '<td class="li-delete">' +
+        '<label style="display:none"><input type="checkbox" name="' + prefix + 'DELETE"></label>' +
+        '<button type="button" class="line-item-delete-btn" title="Remove" onclick="removeLine(this)">&#10005;</button>' +
+      '</td>';
+
+    tbody.appendChild(tr);
     totalForms.value = idx + 1;
     recalc();
   });
 
-  // Remove line
+  // ── Remove Line ──
   window.removeLine = function (btn) {
     var row = btn.closest('.line-item-row');
     var chk = row.querySelector('input[type="checkbox"]');
@@ -218,7 +236,6 @@
     recalc();
   };
 
-  // Currency change → reformat
   var currSel = document.getElementById('id_currency');
   if (currSel) { currSel.addEventListener('change', recalc); }
 })();

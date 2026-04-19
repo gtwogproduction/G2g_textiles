@@ -220,7 +220,11 @@ class FactoryIsolationTests(PortalTestCase):
         self.factory = make_user('factory1', group_name='factory')
         self.other_factory = make_user('factory2', group_name='factory')
         self.assigned_quote = make_quote(assigned_factory=self.factory)
+        self.assigned_quote.payment_confirmed = True
+        self.assigned_quote.save(update_fields=['payment_confirmed'])
         self.unassigned_quote = make_quote(assigned_factory=self.other_factory)
+        self.unassigned_quote.payment_confirmed = True
+        self.unassigned_quote.save(update_fields=['payment_confirmed'])
         self.client.force_login(self.factory)
 
     def test_factory_gets_404_on_order_not_assigned_to_them(self):
@@ -300,6 +304,8 @@ class FactoryStatusUpdateTests(PortalTestCase):
         self.factory = make_user('factorystatus', group_name='factory')
         self.customer = make_user('custfactory')
         self.quote = make_quote(customer=self.customer, assigned_factory=self.factory)
+        self.quote.payment_confirmed = True
+        self.quote.save(update_fields=['payment_confirmed'])
         self.client.force_login(self.factory)
 
     def test_post_creates_order_status_update(self):
