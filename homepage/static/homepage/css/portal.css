@@ -767,6 +767,14 @@ a:hover { text-decoration: underline; }
   .line-item-table th, .line-item-table td { border-color: #ccc; }
 }
 
+/* ── Scrollable table wrapper (mobile) ── */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+}
+
 /* ── Quote editor responsive ── */
 @media (max-width: 860px) {
   .quote-editor-grid {
@@ -774,8 +782,37 @@ a:hover { text-decoration: underline; }
   }
 }
 
+@media (max-width: 760px) {
+  .quote-total-row {
+    font-size: 0.95rem;
+    padding: 0.65rem 0.25rem;
+  }
+
+  .quote-total-row__amount { font-size: 1.05rem; }
+
+  .quote-actions {
+    flex-direction: column;
+  }
+
+  .quote-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 @media (max-width: 600px) {
-  .line-item-table { font-size: 0.8rem; }
-  .line-item-table th, .line-item-table td { padding: 0.35rem 0.25rem; }
+  .line-item-table { font-size: 0.82rem; min-width: 420px; }
+  .line-item-table th, .line-item-table td { padding: 0.35rem 0.3rem; }
   .line-item-table .li-discount { display: none; }
+
+  /* Touch-friendly inputs inside the table */
+  .line-item-table input[type="text"],
+  .line-item-table input[type="number"] {
+    min-height: 38px;
+    font-size: 0.9rem;
+  }
+
+  .add-line-btn { font-size: 0.82rem; padding: 0.55rem 0.75rem; }
+
+  .quote-meta-list { font-size: 0.82rem; }
 }

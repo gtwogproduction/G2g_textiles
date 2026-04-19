@@ -21,7 +21,8 @@
         <span class="status-badge status-badge--quote-{{ quote.status }}">{{ quote.get_status_display }}</span>
       </div>
 
-      <table class="line-item-table">
+      <div class="table-scroll">
+      <table class="line-item-table" style="min-width:360px">
         <thead>
           <tr>
             <th>{% trans "Line Items" %}</th>
@@ -46,6 +47,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div><!-- /.table-scroll -->
 
       <div class="quote-total-row">
         <span>{% trans "Total" %}</span>
