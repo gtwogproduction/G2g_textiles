@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate
+from django.forms import inlineformset_factory
+from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate, Quote, QuoteLineItem
 
 PRODUCT_CHOICES = [
     ('tshirts', 'T-Shirts'),
@@ -169,3 +170,40 @@ class FactoryAssignForm(forms.Form):
         empty_label='— No factory assigned —',
         label='Assign to factory',
     )
+
+
+class QuoteHeaderForm(forms.ModelForm):
+    class Meta:
+        model = Quote
+        fields = ['currency', 'valid_until', 'estimated_delivery',
+                  'notes_internal', 'notes_customer']
+        widgets = {
+            'valid_until':         forms.DateInput(attrs={'type': 'date'}),
+            'estimated_delivery':  forms.DateInput(attrs={'type': 'date'}),
+            'notes_internal':      forms.Textarea(attrs={'rows': 3,
+                                       'placeholder': 'Internal notes (not shown to customer)'}),
+            'notes_customer':      forms.Textarea(attrs={'rows': 3,
+                                       'placeholder': 'Notes shown on the customer quote'}),
+        }
+
+
+QuoteLineItemFormSet = inlineformset_factory(
+    Quote,
+    QuoteLineItem,
+    fields=['description', 'quantity', 'unit_price', 'discount_pct', 'note', 'order'],
+    extra=1,
+    can_delete=True,
+    widgets={
+        'description': forms.TextInput(attrs={
+            'placeholder': 'e.g. FC Zürich Home Jersey — Navy/White',
+            'class': 'li-description',
+        }),
+        'quantity':    forms.NumberInput(attrs={'class': 'li-qty', 'min': '1'}),
+        'unit_price':  forms.NumberInput(attrs={'class': 'li-price', 'step': '0.01', 'min': '0'}),
+        'discount_pct': forms.NumberInput(attrs={'class': 'li-discount', 'step': '0.01',
+                                                  'min': '0', 'max': '100'}),
+        'note':        forms.TextInput(attrs={'placeholder': 'Optional line note',
+                                              'class': 'li-note'}),
+        'order':       forms.HiddenInput(),
+    }
+)

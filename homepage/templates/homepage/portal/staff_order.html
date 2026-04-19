@@ -153,6 +153,27 @@
       </form>
     </div>
 
+    <!-- Quote -->
+    <div class="portal-card">
+      <h2>{% trans "Quote" %}</h2>
+      {% if quote_obj %}
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+          <span class="status-badge status-badge--quote-{{ quote_obj.status }}">{{ quote_obj.get_status_display }}</span>
+          <span style="font-size:0.85rem;color:var(--muted)">{{ quote_obj.quote_number }}</span>
+        </div>
+        {% if quote_obj.total %}
+          <p style="font-size:0.92rem;margin-bottom:0.75rem">{{ quote_obj.currency }} {{ quote_obj.total }}</p>
+        {% endif %}
+        <div class="quote-actions">
+          <a href="{% url 'staff_quote_edit' quote_pk=quote_obj.pk %}" class="btn btn--ghost">{% trans "Edit Quote" %}</a>
+          <a href="{% url 'staff_quote_print' quote_pk=quote_obj.pk %}" target="_blank" class="btn btn--ghost">{% trans "Print / Save as PDF" %}</a>
+        </div>
+      {% else %}
+        <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.75rem">{% trans "No quote created yet." %}</p>
+        <a href="{% url 'staff_create_quote' pk=quote.pk %}" class="btn btn--ghost">{% trans "Create Quote" %}</a>
+      {% endif %}
+    </div>
+
   </div>
 </div>
 <script>

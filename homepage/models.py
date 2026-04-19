@@ -1,3 +1,5 @@
+from datetime import date as _date
+
 from django.db import models
 from django.conf import settings
 from cloudinary_storage.storage import VideoMediaCloudinaryStorage
@@ -252,6 +254,88 @@ class OrderStatusUpdate(models.Model):
         ordering = ['-created_at']
         verbose_name = 'Order Status Update'
         verbose_name_plural = 'Order Status Updates'
+
+
+class Quote(models.Model):
+    STATUS_CHOICES = [
+        ('draft',    'Draft'),
+        ('sent',     'Sent'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('expired',  'Expired'),
+    ]
+    quote_request     = models.OneToOneField(
+        QuoteRequest, on_delete=models.CASCADE, related_name='quote'
+    )
+    quote_number      = models.CharField(max_length=20, unique=True, blank=True)
+    status            = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    currency          = models.CharField(max_length=5, default='CHF')
+    valid_until       = models.DateField(null=True, blank=True)
+    estimated_delivery = models.DateField(null=True, blank=True)
+    notes_internal    = models.TextField(blank=True,
+                            help_text='Visible to staff only — not shown to the customer.')
+    notes_customer    = models.TextField(blank=True,
+                            help_text='Shown on the customer-facing quote.')
+    created_by        = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name='quotes_created'
+    )
+    created_at        = models.DateTimeField(auto_now_add=True)
+    updated_at        = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.quote_number:
+            year = _date.today().year
+            last = Quote.objects.filter(
+                quote_number__startswith=f'Q-{year}-'
+            ).order_by('quote_number').last()
+            num = int(last.quote_number.split('-')[2]) + 1 if last else 1
+            self.quote_number = f'Q-{year}-{num:04d}'
+        super().save(*args, **kwargs)
+
+    @property
+    def subtotal(self):
+        from decimal import Decimal
+        return sum((item.subtotal for item in self.line_items.all()), Decimal('0.00'))
+
+    @property
+    def total(self):
+        return self.subtotal
+
+    def __str__(self):
+        return f"{self.quote_number} — {self.quote_request}"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Quote'
+        verbose_name_plural = 'Quotes'
+
+
+class QuoteLineItem(models.Model):
+    quote        = models.ForeignKey(Quote, on_delete=models.CASCADE, related_name='line_items')
+    description  = models.CharField(max_length=255)
+    quantity     = models.PositiveIntegerField(default=1)
+    unit_price   = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=0,
+        help_text='Discount percentage (0–100)'
+    )
+    note         = models.CharField(max_length=200, blank=True)
+    order        = models.PositiveIntegerField(default=0)
+
+    @property
+    def subtotal(self):
+        from decimal import Decimal
+        factor = 1 - (self.discount_pct / Decimal('100'))
+        return (self.unit_price * self.quantity * factor).quantize(Decimal('0.01'))
+
+    def __str__(self):
+        return f"{self.description} × {self.quantity}"
+
+    class Meta:
+        ordering = ['order', 'pk']
+        verbose_name = 'Quote Line Item'
+        verbose_name_plural = 'Quote Line Items'
 
 
 class SiteSettings(models.Model):

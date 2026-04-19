@@ -1,0 +1,224 @@
+{% extends "homepage/portal/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if is_create %}{% trans "Create Quote" %}{% else %}{% trans "Edit Quote" %} {{ quote_obj.quote_number }}{% endif %}{% endblock %}
+
+{% block content %}
+<a href="{% url 'staff_order' pk=quote_request.pk %}" class="portal-back">← {% trans "Back to All Orders" %}</a>
+
+<div class="portal-header">
+  <h1>{% if is_create %}{% trans "Create Quote" %}{% else %}{% trans "Edit Quote" %} — {{ quote_obj.quote_number }}{% endif %}</h1>
+  <p>{{ quote_request.company_name|default:quote_request.contact_name }} &mdash; {{ quote_request.contact_name }}</p>
+</div>
+
+<form method="post" id="quote-form">
+{% csrf_token %}
+{{ formset.management_form }}
+
+<div class="quote-editor-grid">
+
+  <!-- Left: line items -->
+  <div>
+    <div class="portal-card">
+      <h2>{% trans "Line Items" %}</h2>
+
+      <table class="line-item-table" id="line-item-table">
+        <thead>
+          <tr>
+            <th>{% trans "Line Items" %}</th>
+            <th>{% trans "Quantity" %}</th>
+            <th>{% trans "Unit Price" %}</th>
+            <th>{% trans "Discount" %} %</th>
+            <th class="li-subtotal">{% trans "Subtotal" %}</th>
+            <th class="li-delete"></th>
+          </tr>
+        </thead>
+        <tbody id="line-item-body">
+          {% for form in formset %}
+            <tr class="line-item-row" data-index="{{ forloop.counter0 }}">
+              <td class="li-description">
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                {{ form.description }}
+                {% if form.description.errors %}<span style="color:#8a0000;font-size:0.78rem">{{ form.description.errors.0 }}</span>{% endif %}
+              </td>
+              <td>
+                <input type="number" name="{{ form.quantity.html_name }}" value="{{ form.quantity.value|default:1 }}" min="1" class="li-qty" data-calc="qty">
+              </td>
+              <td>
+                <input type="number" name="{{ form.unit_price.html_name }}" value="{{ form.unit_price.value|default:'0.00' }}" min="0" step="0.01" class="li-price" data-calc="price">
+              </td>
+              <td>
+                <input type="number" name="{{ form.discount_pct.html_name }}" value="{{ form.discount_pct.value|default:0 }}" min="0" max="100" step="0.01" class="li-discount" data-calc="disc">
+              </td>
+              <td class="li-subtotal">
+                <span class="row-subtotal" data-currency="{{ header_form.currency.value|default:'CHF' }}">—</span>
+              </td>
+              <td class="li-delete">
+                <label style="display:none">{{ form.DELETE }}</label>
+                <button type="button" class="line-item-delete-btn" title="Remove" onclick="removeLine(this)">&#10005;</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <button type="button" class="add-line-btn" id="add-line-btn">+ {% trans "Add Line" %}</button>
+
+      <div class="quote-total-row">
+        <span>{% trans "Total" %}</span>
+        <span class="quote-total-row__amount" id="grand-total">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: header + actions -->
+  <div>
+    <div class="portal-card">
+      <h2>{% trans "Quote" %}</h2>
+
+      {% if quote_obj %}
+        <span class="status-badge status-badge--quote-{{ quote_obj.status }}">{{ quote_obj.get_status_display }}</span>
+        <ul class="quote-meta-list" style="margin-top:0.75rem">
+          <li><strong>{{ quote_obj.quote_number }}</strong></li>
+        </ul>
+      {% endif %}
+
+      <div class="portal-form" style="margin-top:0.5rem">
+        <div>
+          <label>{% trans "Currency" %}</label>
+          {{ header_form.currency }}
+        </div>
+        <div>
+          <label>{% trans "Valid Until" %}</label>
+          {{ header_form.valid_until }}
+        </div>
+        <div>
+          <label>{% trans "Estimated Delivery" %}</label>
+          {{ header_form.estimated_delivery }}
+        </div>
+        <div>
+          <label>{% trans "Customer notes" %}</label>
+          {{ header_form.notes_customer }}
+        </div>
+        <div>
+          <label>{% trans "Internal notes" %}</label>
+          {{ header_form.notes_internal }}
+        </div>
+      </div>
+
+      <div class="quote-actions">
+        <button type="submit" name="save_draft" class="btn btn--primary">{% trans "Save Draft" %}</button>
+
+        {% if quote_obj %}
+          <button type="button" class="btn btn--ghost"
+            onclick="if(confirm('{% trans "Send to Customer" %}?')){document.getElementById('send-form').submit();}">
+            {% trans "Send to Customer" %}
+          </button>
+          <a href="{% url 'staff_quote_print' quote_obj.pk %}" target="_blank" class="btn btn--ghost no-print">{% trans "Print / Save as PDF" %}</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="portal-card">
+      <h2>{% trans "Order" %}</h2>
+      <ul class="quote-meta-list">
+        <li>{{ quote_request.product_types }}</li>
+        <li>{{ quote_request.get_quantity_per_style_display }} &times; {{ quote_request.num_styles }} style{{ quote_request.num_styles|pluralize }}</li>
+        {% if quote_request.brand_colours %}<li>{{ quote_request.brand_colours }}</li>{% endif %}
+        {% if quote_request.get_print_method_display %}<li>{{ quote_request.get_print_method_display }}</li>{% endif %}
+      </ul>
+    </div>
+  </div>
+
+</div>
+</form>
+
+{% if quote_obj %}
+<form method="post" action="{% url 'staff_quote_send' quote_obj.pk %}" id="send-form">
+  {% csrf_token %}
+</form>
+{% endif %}
+
+<script>
+(function () {
+  var totalForms = document.getElementById('id_form-TOTAL_FORMS');
+  var tbody = document.getElementById('line-item-body');
+  var grandTotalEl = document.getElementById('grand-total');
+
+  function currency() {
+    var sel = document.querySelector('[name$="-currency"], select[name="currency"], #id_currency');
+    return (sel && sel.value) ? sel.value : 'CHF';
+  }
+
+  function rowSubtotal(row) {
+    var qty   = parseFloat(row.querySelector('[data-calc="qty"]').value)   || 0;
+    var price = parseFloat(row.querySelector('[data-calc="price"]').value) || 0;
+    var disc  = parseFloat(row.querySelector('[data-calc="disc"]').value)  || 0;
+    return qty * price * (1 - disc / 100);
+  }
+
+  function fmt(n) {
+    return currency() + ' ' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  }
+
+  function recalc() {
+    var total = 0;
+    tbody.querySelectorAll('.line-item-row').forEach(function (row) {
+      var deleteChk = row.querySelector('input[type="checkbox"]');
+      if (deleteChk && deleteChk.checked) {
+        row.querySelector('.row-subtotal').textContent = '—';
+        return;
+      }
+      var sub = rowSubtotal(row);
+      total += sub;
+      row.querySelector('.row-subtotal').textContent = fmt(sub);
+    });
+    grandTotalEl.textContent = fmt(total);
+  }
+
+  // Live recalc on any input change
+  tbody.addEventListener('input', recalc);
+  recalc();
+
+  // Add line
+  document.getElementById('add-line-btn').addEventListener('click', function () {
+    var idx = parseInt(totalForms.value);
+    var template = tbody.querySelector('.line-item-row');
+    var newRow = template.cloneNode(true);
+    newRow.setAttribute('data-index', idx);
+
+    newRow.querySelectorAll('input, select, textarea').forEach(function (el) {
+      var name = el.name.replace(/form-\d+-/, 'form-' + idx + '-');
+      var id   = el.id.replace(/id_form-\d+-/, 'id_form-' + idx + '-');
+      el.name = name;
+      el.id   = id;
+      if (el.type === 'checkbox') { el.checked = false; }
+      else if (el.type !== 'hidden') { el.value = el.type === 'number' ? (el.getAttribute('min') || '0') : ''; }
+    });
+
+    newRow.querySelector('.row-subtotal').textContent = '—';
+    tbody.appendChild(newRow);
+    totalForms.value = idx + 1;
+    recalc();
+  });
+
+  // Remove line
+  window.removeLine = function (btn) {
+    var row = btn.closest('.line-item-row');
+    var chk = row.querySelector('input[type="checkbox"]');
+    if (chk) {
+      chk.checked = true;
+      row.style.opacity = '0.35';
+      btn.style.display = 'none';
+    } else {
+      row.remove();
+    }
+    recalc();
+  };
+
+  // Currency change → reformat
+  var currSel = document.getElementById('id_currency');
+  if (currSel) { currSel.addEventListener('change', recalc); }
+})();
+</script>
+{% endblock %}

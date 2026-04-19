@@ -11,7 +11,7 @@ from django.test import TestCase, Client, override_settings
 from django.contrib.auth.models import User, Group
 from django.urls import reverse
 
-from homepage.models import QuoteRequest, OrderStatusUpdate
+from homepage.models import QuoteRequest, OrderStatusUpdate, Quote
 
 
 # ---------------------------------------------------------------------------
@@ -78,6 +78,22 @@ def staff_order_url(pk):
 
 def factory_order_url(pk):
     return f'/en/portal/factory/{pk}/'
+
+
+def staff_create_quote_url(pk):
+    return f'/en/portal/staff/{pk}/quote/create/'
+
+
+def staff_quote_edit_url(quote_pk):
+    return f'/en/portal/staff/quote/{quote_pk}/'
+
+
+def staff_quote_send_url(quote_pk):
+    return f'/en/portal/staff/quote/{quote_pk}/send/'
+
+
+def customer_quote_url(pk):
+    return f'/en/portal/customer/{pk}/quote/'
 
 
 # ---------------------------------------------------------------------------
@@ -354,3 +370,97 @@ class StaffBlockedFromCustomerViewsTests(PortalTestCase):
         response = self.client.get(customer_order_url(self.quote.pk))
         self.assertIn(response.status_code, [301, 302])
         self.assertNotEqual(response.status_code, 200)
+
+
+class QuoteBuilderTests(PortalTestCase):
+    """Tests for the Quote Builder feature."""
+
+    def setUp(self):
+        self.staff = make_user('quotestaff', group_name='g2g_staff')
+        self.customer = make_user('quotecustomer')
+        self.other_customer = make_user('quoteother')
+        self.quote_request = make_quote(customer=self.customer)
+
+    def _create_quote_via_post(self):
+        """Helper: staff POSTs to create a quote, returns the Quote object."""
+        self.client.force_login(self.staff)
+        data = {
+            'currency': 'CHF',
+            'valid_until': '2026-12-31',
+            'estimated_delivery': '',
+            'notes_internal': '',
+            'notes_customer': '',
+            # Management form for inline formset (0 extra forms)
+            'line_items-TOTAL_FORMS': '1',
+            'line_items-INITIAL_FORMS': '0',
+            'line_items-MIN_NUM_FORMS': '0',
+            'line_items-MAX_NUM_FORMS': '1000',
+            'line_items-0-description': 'Test Jersey',
+            'line_items-0-quantity': '100',
+            'line_items-0-unit_price': '25.00',
+            'line_items-0-discount_pct': '0',
+            'line_items-0-note': '',
+            'line_items-0-order': '0',
+            'line_items-0-DELETE': '',
+        }
+        self.client.post(staff_create_quote_url(self.quote_request.pk), data)
+        return Quote.objects.get(quote_request=self.quote_request)
+
+    def test_staff_can_create_quote_for_request(self):
+        """WHEN staff POSTs to create quote SHOULD create Quote with auto quote_number."""
+        self.client.force_login(self.staff)
+        data = {
+            'currency': 'CHF',
+            'valid_until': '2026-12-31',
+            'estimated_delivery': '',
+            'notes_internal': '',
+            'notes_customer': '',
+            'line_items-TOTAL_FORMS': '1',
+            'line_items-INITIAL_FORMS': '0',
+            'line_items-MIN_NUM_FORMS': '0',
+            'line_items-MAX_NUM_FORMS': '1000',
+            'line_items-0-description': 'Test Jersey',
+            'line_items-0-quantity': '100',
+            'line_items-0-unit_price': '25.00',
+            'line_items-0-discount_pct': '0',
+            'line_items-0-note': '',
+            'line_items-0-order': '0',
+            'line_items-0-DELETE': '',
+        }
+        self.client.post(staff_create_quote_url(self.quote_request.pk), data)
+        self.assertTrue(Quote.objects.filter(quote_request=self.quote_request).exists())
+        quote = Quote.objects.get(quote_request=self.quote_request)
+        self.assertTrue(quote.quote_number.startswith('Q-'))
+
+    def test_send_quote_changes_status_to_sent(self):
+        """WHEN staff POSTs to send quote SHOULD change status to sent."""
+        quote = self._create_quote_via_post()
+        self.client.force_login(self.staff)
+        self.client.post(staff_quote_send_url(quote.pk))
+        quote.refresh_from_db()
+        self.assertEqual(quote.status, 'sent')
+
+    def test_customer_can_view_sent_quote(self):
+        """WHEN customer GETs sent quote SHOULD return 200."""
+        quote = self._create_quote_via_post()
+        quote.status = 'sent'
+        quote.save(update_fields=['status', 'updated_at'])
+        self.client.force_login(self.customer)
+        response = self.client.get(customer_quote_url(self.quote_request.pk))
+        self.assertEqual(response.status_code, 200)
+
+    def test_customer_cannot_view_draft_quote(self):
+        """WHEN customer GETs draft quote SHOULD return 404."""
+        self._create_quote_via_post()
+        self.client.force_login(self.customer)
+        response = self.client.get(customer_quote_url(self.quote_request.pk))
+        self.assertEqual(response.status_code, 404)
+
+    def test_other_customer_cannot_view_quote(self):
+        """WHEN wrong customer GETs quote SHOULD return 404."""
+        quote = self._create_quote_via_post()
+        quote.status = 'sent'
+        quote.save(update_fields=['status', 'updated_at'])
+        self.client.force_login(self.other_customer)
+        response = self.client.get(customer_quote_url(self.quote_request.pk))
+        self.assertEqual(response.status_code, 404)

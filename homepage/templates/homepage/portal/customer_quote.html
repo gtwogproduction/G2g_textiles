@@ -1,0 +1,96 @@
+{% extends "homepage/portal/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Your Quote" %} — {{ quote.quote_number }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'customer_order' pk=quote_request.pk %}" class="portal-back">← {% trans "Back to My Orders" %}</a>
+
+<div class="portal-header">
+  <h1>{% trans "Your Quote" %}</h1>
+  <p>{{ quote_request.company_name|default:quote_request.contact_name }}</p>
+</div>
+
+<div class="portal-order-grid">
+
+  <!-- Left: line items -->
+  <div>
+    <div class="portal-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h2 style="margin:0">{{ quote.quote_number }}</h2>
+        <span class="status-badge status-badge--quote-{{ quote.status }}">{{ quote.get_status_display }}</span>
+      </div>
+
+      <table class="line-item-table">
+        <thead>
+          <tr>
+            <th>{% trans "Line Items" %}</th>
+            <th>{% trans "Quantity" %}</th>
+            <th>{% trans "Unit Price" %}</th>
+            <th class="li-subtotal">{% trans "Subtotal" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in line_items %}
+          <tr>
+            <td class="li-description">
+              {{ item.description }}
+              {% if item.note %}<span style="display:block;font-size:0.78rem;color:var(--muted)">{{ item.note }}</span>{% endif %}
+            </td>
+            <td>{{ item.quantity }}</td>
+            <td style="white-space:nowrap">{{ quote.currency }} {{ item.unit_price }}</td>
+            <td class="li-subtotal" style="white-space:nowrap">{{ quote.currency }} {{ item.subtotal }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="color:var(--muted);padding:1rem 0.5rem">—</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="quote-total-row">
+        <span>{% trans "Total" %}</span>
+        <span class="quote-total-row__amount">{{ quote.currency }} {{ quote.total }}</span>
+      </div>
+    </div>
+
+    {% if quote.notes_customer %}
+    <div class="portal-card">
+      <h2>{% trans "Customer notes" %}</h2>
+      <p style="font-size:0.92rem;line-height:1.7">{{ quote.notes_customer|linebreaksbr }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: quote details + CTA -->
+  <div>
+    <div class="portal-card">
+      <h2>{% trans "Quote Details" %}</h2>
+      <ul class="quote-meta-list">
+        {% if quote.valid_until %}
+        <li>{% trans "Valid Until" %}: <strong>{{ quote.valid_until|date:"d M Y" }}</strong></li>
+        {% endif %}
+        {% if quote.estimated_delivery %}
+        <li>{% trans "Estimated Delivery" %}: <strong>{{ quote.estimated_delivery|date:"d M Y" }}</strong></li>
+        {% endif %}
+        <li>{% trans "Currency" %}: <strong>{{ quote.currency }}</strong></li>
+      </ul>
+
+      <div style="margin-top:1.25rem;padding:1rem;background:var(--bg-alt);border-radius:var(--radius);font-size:0.88rem;line-height:1.7">
+        <p>{% trans "To accept this quote, reply to" %} <a href="mailto:production@gtwog.ch" style="font-weight:500">production@gtwog.ch</a></p>
+      </div>
+    </div>
+
+    <div class="portal-card">
+      <h2>{% trans "Order" %}</h2>
+      <ul class="quote-meta-list">
+        <li>{{ quote_request.product_types }}</li>
+        <li>{{ quote_request.get_quantity_per_style_display }} &times; {{ quote_request.num_styles }} style{{ quote_request.num_styles|pluralize }}</li>
+        {% if quote_request.submitted_at %}
+        <li>{% trans "Submitted" %} {{ quote_request.submitted_at|date:"d M Y" }}</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

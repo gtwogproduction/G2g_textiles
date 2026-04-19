@@ -435,3 +435,75 @@ msgstr "Nächste Phase"
 
 msgid "Current stage"
 msgstr "Aktuelle Phase"
+
+msgid "Quote"
+msgstr "Angebot"
+
+msgid "Create Quote"
+msgstr "Angebot erstellen"
+
+msgid "Edit Quote"
+msgstr "Angebot bearbeiten"
+
+msgid "Send to Customer"
+msgstr "An Kunden senden"
+
+msgid "Print / Save as PDF"
+msgstr "Drucken / Als PDF speichern"
+
+msgid "Line Items"
+msgstr "Positionen"
+
+msgid "Unit Price"
+msgstr "Einzelpreis"
+
+msgid "Discount"
+msgstr "Rabatt"
+
+msgid "Subtotal"
+msgstr "Zwischensumme"
+
+msgid "Total"
+msgstr "Gesamt"
+
+msgid "Valid Until"
+msgstr "Gültig bis"
+
+msgid "Estimated Delivery"
+msgstr "Voraussichtliche Lieferung"
+
+msgid "Add Line"
+msgstr "Position hinzufügen"
+
+msgid "Quote sent to customer."
+msgstr "Angebot an Kunden gesendet."
+
+msgid "Quote saved."
+msgstr "Angebot gespeichert."
+
+msgid "Quote created."
+msgstr "Angebot erstellt."
+
+msgid "Currency"
+msgstr "Währung"
+
+msgid "Internal notes"
+msgstr "Interne Notizen"
+
+msgid "Customer notes"
+msgstr "Kundennotizen"
+
+msgid "Save Draft"
+msgstr "Entwurf speichern"
+
+msgid "No quote created yet."
+msgstr "Noch kein Angebot erstellt."
+
+msgid "View Quote"
+msgstr "Angebot ansehen"
+
+msgid "Your Quote"
+msgstr "Ihr Angebot"
+
+msgid "To accept this quote, reply to"
+msgstr "Um dieses Angebot anzunehmen, antworten Sie auf"

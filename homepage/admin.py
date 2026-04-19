@@ -2,9 +2,36 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
     ContactSubmission, QuoteRequest, OrderStatusUpdate,
+    Quote, QuoteLineItem,
     SiteSettings, Service, HowItWorksStep, ClientLogo, LegalPage,
     BlogPost, BlogCategory, BlogPostImage,
 )
+
+
+class QuoteLineItemInline(admin.TabularInline):
+    model = QuoteLineItem
+    extra = 1
+    fields = ['description', 'quantity', 'unit_price', 'discount_pct', 'note', 'order']
+
+
+class QuoteInline(admin.StackedInline):
+    model = Quote
+    extra = 0
+    max_num = 1
+    readonly_fields = ['quote_number', 'created_at', 'updated_at']
+    fields = ['quote_number', 'status', 'currency', 'valid_until', 'estimated_delivery',
+              'notes_internal', 'notes_customer', 'created_at', 'updated_at']
+    show_change_link = True
+
+
+@admin.register(Quote)
+class QuoteAdmin(admin.ModelAdmin):
+    list_display = ['quote_number', 'quote_request', 'status', 'currency',
+                    'valid_until', 'created_by', 'created_at']
+    list_filter  = ['status', 'currency', 'created_at']
+    search_fields = ['quote_number', 'quote_request__company_name']
+    readonly_fields = ['quote_number', 'created_at', 'updated_at']
+    inlines = [QuoteLineItemInline]
 
 
 @admin.register(ContactSubmission)
@@ -29,7 +56,7 @@ class QuoteRequestAdmin(admin.ModelAdmin):
     search_fields = ['company_name', 'contact_name', 'email']
     readonly_fields = ['submitted_at']
     list_editable = ['status']
-    inlines = [OrderStatusUpdateInline]
+    inlines = [OrderStatusUpdateInline, QuoteInline]
     fieldsets = (
         ('About', {'fields': ('company_name', 'industry', 'industry_other', 'contact_name', 'role', 'email', 'phone', 'website')}),
         ('The Order', {'fields': ('product_types', 'product_other', 'num_styles', 'quantity_per_style')}),

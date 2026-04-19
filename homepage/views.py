@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -11,8 +13,9 @@ from .forms import (
     QuoteStep1Form, QuoteStep2Form, QuoteStep3Form,
     QuoteStep4Form, QuoteStep5Form,
     StatusUpdateForm, FactoryAssignForm,
+    QuoteHeaderForm, QuoteLineItemFormSet,
 )
-from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate
+from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate, Quote, QuoteLineItem
 
 QUOTE_STEPS = [
     ('about',   _l('About You'),            QuoteStep1Form),
@@ -385,6 +388,24 @@ def _latest_update_status(quote):
     return last.status if last else None
 
 
+def _is_customer(user):
+    return not user.groups.exists()
+
+
+_QTY_MIDPOINTS = {
+    '50-100':    75,
+    '100-250':   175,
+    '250-500':   375,
+    '500-1000':  750,
+    '1000-5000': 3000,
+    '5000+':     5000,
+}
+
+
+def _midpoint_of_qty_band(band):
+    return _QTY_MIDPOINTS.get(band, 100)
+
+
 _STATUS_BADGE_COLOURS = {
     'quote_received':  ('rgba(0,0,0,0.06)',      '#6b6760'),
     'in_review':       ('rgba(180,130,0,0.12)',   '#6b4e00'),
@@ -620,6 +641,164 @@ def _send_status_notification(quote, update):
         print(f"Failed to send status notification: {e}")
 
 
+def _build_quote_notification_html(first_name, order_name, quote_number,
+                                    line_items, total, currency,
+                                    valid_until_str, notes_customer, portal_url):
+    rows = ""
+    for item in line_items:
+        disc = f" (–{item.discount_pct}%)" if item.discount_pct else ""
+        rows += f"""
+        <tr>
+          <td style="padding:8px 12px;border-bottom:1px solid #edeae4;font-size:13px;color:#1a1a1a">{item.description}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #edeae4;font-size:13px;color:#6b6760;text-align:center">{item.quantity}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #edeae4;font-size:13px;color:#6b6760;text-align:right">{currency} {item.unit_price}{disc}</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #edeae4;font-size:13px;font-weight:500;color:#1a1a1a;text-align:right">{currency} {item.subtotal}</td>
+        </tr>"""
+
+    notes_block = ""
+    if notes_customer:
+        notes_block = f"""
+      <tr><td style="padding:0 40px 24px">
+        <div style="background:#f5f2ee;border-left:3px solid #1a1a1a;padding:14px 18px;
+                    border-radius:0 4px 4px 0;font-size:14px;line-height:1.6;color:#1a1a1a">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;
+                      text-transform:uppercase;color:#6b6760;margin-bottom:6px">Note</div>
+          {notes_customer}
+        </div>
+      </td></tr>"""
+
+    valid_block = f'<span style="font-size:13px;color:#6b6760">Valid until: <strong style="color:#1a1a1a">{valid_until_str}</strong></span>' if valid_until_str else ""
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Your Quote</title>
+</head>
+<body style="margin:0;padding:0;background:#edeae4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#edeae4;padding:40px 20px">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px">
+  <tr><td style="background:#1a1a1a;padding:24px 40px;border-radius:4px 4px 0 0">
+    <span style="font-family:Arial,sans-serif;font-size:20px;font-weight:900;
+                 letter-spacing:0.18em;text-transform:uppercase;color:#f5f2ee">
+      G2G <span style="opacity:0.55">TEXTILES</span>
+    </span>
+  </td></tr>
+  <tr><td style="background:#ffffff;border-radius:0 0 4px 4px;overflow:hidden">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td style="padding:36px 40px 8px">
+        <p style="margin:0;font-size:22px;font-weight:600;color:#1a1a1a">Hi {first_name},</p>
+      </td></tr>
+      <tr><td style="padding:12px 40px 24px">
+        <p style="margin:0;font-size:15px;color:#6b6760;line-height:1.6">
+          Your quote for <strong style="color:#1a1a1a">{order_name}</strong> is ready.
+          Reference: <strong style="color:#1a1a1a">{quote_number}</strong>
+        </p>
+      </td></tr>
+      <tr><td style="padding:0 40px 28px">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #edeae4;border-radius:4px;overflow:hidden">
+          <thead>
+            <tr style="background:#f5f2ee">
+              <th style="padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#6b6760;text-align:left">Item</th>
+              <th style="padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#6b6760;text-align:center">Qty</th>
+              <th style="padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#6b6760;text-align:right">Unit Price</th>
+              <th style="padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#6b6760;text-align:right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>{rows}</tbody>
+          <tfoot>
+            <tr style="background:#f5f2ee">
+              <td colspan="3" style="padding:10px 12px;font-size:13px;font-weight:600;color:#1a1a1a;text-align:right">Total</td>
+              <td style="padding:10px 12px;font-size:14px;font-weight:700;color:#1a1a1a;text-align:right">{currency} {total}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </td></tr>
+      {notes_block}
+      <tr><td style="padding:0 40px">
+        <div style="border-top:1px solid rgba(0,0,0,0.08)"></div>
+      </td></tr>
+      <tr><td style="padding:28px 40px 8px">{valid_block}</td></tr>
+      <tr><td style="padding:12px 40px 36px">
+        <p style="margin:0 0 18px;font-size:14px;color:#6b6760;line-height:1.6">
+          Log in to your portal to view the full quote details.
+        </p>
+        <a href="{portal_url}"
+           style="display:inline-block;background:#1a1a1a;color:#ffffff;
+                  font-size:13px;font-weight:600;letter-spacing:0.04em;
+                  text-decoration:none;padding:12px 24px;border-radius:4px">
+          View Quote &rarr;
+        </a>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:24px 0 0;text-align:center">
+    <p style="margin:0;font-size:12px;color:#6b6760;line-height:1.8">
+      G2G Textiles &nbsp;&middot;&nbsp; production@gtwog.ch
+    </p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+
+def _send_quote_notification(quote):
+    if not quote.quote_request.customer or not quote.quote_request.customer.email:
+        return
+    from django.core.mail import send_mail
+    from django.conf import settings as django_settings
+
+    qr = quote.quote_request
+    first_name = (
+        qr.customer.first_name
+        or (qr.contact_name.split()[0] if qr.contact_name else 'there')
+    )
+    order_name = qr.company_name or qr.contact_name
+    portal_url = f"https://gtwog.ch/en/portal/customer/{qr.pk}/quote/"
+    line_items = list(quote.line_items.all())
+    valid_str = quote.valid_until.strftime('%d %b %Y') if quote.valid_until else ''
+
+    subject = f"Your Quote {quote.quote_number} — G2G Textiles"
+    plain = (
+        f"Hi {first_name},\n\n"
+        f"Your quote {quote.quote_number} for {order_name} is ready.\n\n"
+        + "\n".join(
+            f"- {item.description}: {item.quantity} × {quote.currency} {item.unit_price} = {quote.currency} {item.subtotal}"
+            for item in line_items
+        )
+        + f"\n\nTotal: {quote.currency} {quote.total}"
+        + (f"\nValid until: {valid_str}" if valid_str else "")
+        + (f"\n\n{quote.notes_customer}" if quote.notes_customer else "")
+        + f"\n\nView your quote: {portal_url}\n\nBest regards,\nThe G2G Textiles Team"
+    )
+    html = _build_quote_notification_html(
+        first_name=first_name,
+        order_name=order_name,
+        quote_number=quote.quote_number,
+        line_items=line_items,
+        total=quote.total,
+        currency=quote.currency,
+        valid_until_str=valid_str,
+        notes_customer=quote.notes_customer,
+        portal_url=portal_url,
+    )
+    try:
+        send_mail(
+            subject=subject,
+            message=plain,
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[qr.customer.email],
+            html_message=html,
+            fail_silently=False,
+        )
+    except Exception as e:
+        print(f"Failed to send quote notification: {e}")
+
+
 # ---------------------------------------------------------------------------
 # Portal views
 # ---------------------------------------------------------------------------
@@ -768,6 +947,7 @@ def staff_order(request, pk):
         'current_status_key': current_status_key,
         'current_status_label': _status_labels.get(current_status_key, ''),
         'pipeline_complete': pipeline_complete,
+        'quote_obj': getattr(quote, 'quote', None),
     })
 
 
@@ -835,4 +1015,138 @@ def factory_order(request, pk):
         'current_status_key': current_status_key,
         'current_status_label': _status_labels.get(current_status_key, ''),
         'pipeline_complete': pipeline_complete,
+    })
+
+
+@login_required
+def staff_create_quote(request, pk):
+    if not _is_g2g_staff(request.user):
+        return redirect('portal_home')
+    try:
+        quote_request = QuoteRequest.objects.get(pk=pk)
+    except QuoteRequest.DoesNotExist:
+        raise Http404
+
+    # Redirect if quote already exists
+    if hasattr(quote_request, 'quote'):
+        return redirect('staff_quote_edit', quote_pk=quote_request.quote.pk)
+
+    if request.method == 'POST':
+        header_form = QuoteHeaderForm(request.POST)
+        formset = QuoteLineItemFormSet(request.POST)
+        # Build an unsaved Quote so formset has a parent
+        if header_form.is_valid() and formset.is_valid():
+            quote = header_form.save(commit=False)
+            quote.quote_request = quote_request
+            quote.created_by = request.user
+            quote.save()
+            formset.instance = quote
+            formset.save()
+            messages.success(request, _('Quote created.'))
+            return redirect('staff_quote_edit', quote_pk=quote.pk)
+    else:
+        header_form = QuoteHeaderForm()
+        # Seed suggested line items
+        suggested = []
+        for i in range(quote_request.num_styles):
+            suggested.append({
+                'description': f"{quote_request.product_types} — Style {i + 1}",
+                'quantity': _midpoint_of_qty_band(quote_request.quantity_per_style),
+                'unit_price': '0.00',
+                'discount_pct': '0',
+                'note': '',
+                'order': i,
+                'DELETE': False,
+            })
+        from django.forms import formset_factory
+        initial = suggested if suggested else [{}]
+        formset = QuoteLineItemFormSet(initial=initial)
+
+    return render(request, 'homepage/portal/staff_quote_edit.html', {
+        'quote_request': quote_request,
+        'header_form': header_form,
+        'formset': formset,
+        'quote_obj': None,
+        'is_create': True,
+    })
+
+
+@login_required
+def staff_quote_edit(request, quote_pk):
+    if not _is_g2g_staff(request.user):
+        return redirect('portal_home')
+    try:
+        quote = Quote.objects.get(pk=quote_pk)
+    except Quote.DoesNotExist:
+        raise Http404
+
+    if request.method == 'POST':
+        header_form = QuoteHeaderForm(request.POST, instance=quote)
+        formset = QuoteLineItemFormSet(request.POST, instance=quote)
+        if header_form.is_valid() and formset.is_valid():
+            header_form.save()
+            formset.save()
+            messages.success(request, _('Quote saved.'))
+            return redirect('staff_quote_edit', quote_pk=quote.pk)
+    else:
+        header_form = QuoteHeaderForm(instance=quote)
+        formset = QuoteLineItemFormSet(instance=quote)
+
+    return render(request, 'homepage/portal/staff_quote_edit.html', {
+        'quote_request': quote.quote_request,
+        'header_form': header_form,
+        'formset': formset,
+        'quote_obj': quote,
+        'is_create': False,
+    })
+
+
+@login_required
+def staff_quote_send(request, quote_pk):
+    if not _is_g2g_staff(request.user):
+        return redirect('portal_home')
+    if request.method != 'POST':
+        return redirect('staff_quote_edit', quote_pk=quote_pk)
+    try:
+        quote = Quote.objects.get(pk=quote_pk)
+    except Quote.DoesNotExist:
+        raise Http404
+    quote.status = 'sent'
+    quote.save(update_fields=['status', 'updated_at'])
+    _send_quote_notification(quote)
+    messages.success(request, _('Quote sent to customer.'))
+    return redirect('staff_quote_edit', quote_pk=quote_pk)
+
+
+@login_required
+def staff_quote_print(request, quote_pk):
+    if not _is_g2g_staff(request.user):
+        return redirect('portal_home')
+    try:
+        quote = Quote.objects.get(pk=quote_pk)
+    except Quote.DoesNotExist:
+        raise Http404
+    line_items = quote.line_items.all()
+    return render(request, 'homepage/portal/staff_quote_print.html', {
+        'quote': quote,
+        'line_items': line_items,
+    })
+
+
+@login_required
+def customer_quote_view(request, pk):
+    if not _is_customer(request.user):
+        return redirect('portal_home')
+    try:
+        quote_request = QuoteRequest.objects.get(pk=pk, customer=request.user)
+        quote = quote_request.quote
+    except (QuoteRequest.DoesNotExist, Quote.DoesNotExist, AttributeError):
+        raise Http404
+    if quote.status == 'draft':
+        raise Http404
+    line_items = quote.line_items.all()
+    return render(request, 'homepage/portal/customer_quote.html', {
+        'quote': quote,
+        'quote_request': quote_request,
+        'line_items': line_items,
     })

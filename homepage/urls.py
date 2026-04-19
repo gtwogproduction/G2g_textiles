@@ -22,4 +22,9 @@ urlpatterns = [
     path('portal/staff/<int:pk>/', views.staff_order, name='staff_order'),
     path('portal/factory/', views.factory_dashboard, name='factory_dashboard'),
     path('portal/factory/<int:pk>/', views.factory_order, name='factory_order'),
+    path('portal/staff/<int:pk>/quote/create/', views.staff_create_quote, name='staff_create_quote'),
+    path('portal/staff/quote/<int:quote_pk>/', views.staff_quote_edit, name='staff_quote_edit'),
+    path('portal/staff/quote/<int:quote_pk>/send/', views.staff_quote_send, name='staff_quote_send'),
+    path('portal/staff/quote/<int:quote_pk>/print/', views.staff_quote_print, name='staff_quote_print'),
+    path('portal/customer/<int:pk>/quote/', views.customer_quote_view, name='customer_quote_view'),
 ]
