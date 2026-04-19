@@ -491,17 +491,97 @@
 .country-tag--mid { background: rgba(0,160,100,0.08); color: #007a4d; }
 .country-tag--premium { background: rgba(180,130,0,0.1); color: #8a6200; }
 
-/* ===== MOBILE ===== */
-@media (max-width: 860px) {
-  .radio-pills { flex-direction: row; }
-  .checkbox-grid { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 400px) {
-  .checkbox-grid { grid-template-columns: 1fr; }
-  .radio-pills { flex-direction: column; }
-}
-
+/* ===== FORM ACTIONS ===== */
 .form-actions {
   margin-top: 3rem;
   padding-top: 1.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ===== RESPONSIVE — tablet ===== */
+@media (max-width: 860px) {
+  /* Nav */
+  .quote-page .nav {
+    padding: 1rem 1.25rem;
+  }
+
+  /* Layout: hide sidebar, single-column */
+  .quote-main {
+    grid-template-columns: 1fr;
+    padding-top: 56px;
+  }
+
+  .quote-sidebar {
+    display: none;
+  }
+
+  /* Panel */
+  .quote-panel__inner {
+    padding: 2rem 1.5rem 5rem;
+  }
+
+  .panel__title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Form grid: single column */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    row-gap: 1.4rem;
+  }
+
+  /* These stay as-is on tablet */
+  .radio-pills { flex-direction: row; }
+  .checkbox-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Country card tag wraps gracefully */
+  .country-card__header { flex-wrap: wrap; }
+}
+
+/* ===== RESPONSIVE — mobile ===== */
+@media (max-width: 480px) {
+  .quote-panel__inner {
+    padding: 1.5rem 1rem 4rem;
+  }
+
+  .panel__title {
+    font-size: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .progress-label {
+    margin-bottom: 1.25rem;
+  }
+
+  /* Checkbox grid: single column on small screens */
+  .checkbox-grid { grid-template-columns: 1fr; }
+
+  /* Radio pills: stack vertically */
+  .radio-pills { flex-direction: column; }
+
+  /* Radio rows: tighter on small screens */
+  .radio-row { padding: 0.65rem 0.85rem; font-size: 0.87rem; }
+
+  /* Country cards: tighter */
+  .country-card { padding: 0.85rem 1rem; }
+  .country-card__desc { font-size: 0.78rem; }
+
+  /* Actions: stack buttons */
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.6rem;
+    margin-top: 2rem;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+  }
 }
