@@ -240,7 +240,7 @@ class StaffStatusUpdateTests(PortalTestCase):
         self.assertRedirects(response, staff_order_url(self.quote.pk), fetch_redirect_response=False)
         self.assertEqual(OrderStatusUpdate.objects.filter(quote_request=self.quote).count(), 1)
         update = OrderStatusUpdate.objects.get(quote_request=self.quote)
-        self.assertEqual(update.status, 'in_review')
+        self.assertEqual(update.status, 'quote_received')  # first in pipeline
         self.assertEqual(update.created_by, self.staff)
 
     def test_post_issue_creates_update_with_issue_type(self):
@@ -297,7 +297,7 @@ class FactoryStatusUpdateTests(PortalTestCase):
         self.assertRedirects(response, factory_order_url(self.quote.pk), fetch_redirect_response=False)
         self.assertEqual(OrderStatusUpdate.objects.filter(quote_request=self.quote).count(), 1)
         update = OrderStatusUpdate.objects.get(quote_request=self.quote)
-        self.assertEqual(update.status, 'in_production')
+        self.assertEqual(update.status, 'quote_received')  # first in pipeline
         self.assertEqual(update.created_by, self.factory)
 
     def test_post_issue_creates_update_with_issue_type(self):

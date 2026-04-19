@@ -423,3 +423,15 @@ msgstr "Sendung verfolgen"
 
 msgid "Leave blank if not yet available."
 msgstr "Leer lassen, falls noch nicht verfügbar."
+
+msgid "All status stages have been posted."
+msgstr "Alle Statusphasen wurden bereits gepostet."
+
+msgid "You can still flag a delay or issue below."
+msgstr "Sie können unten noch eine Verzögerung oder ein Problem melden."
+
+msgid "Next stage"
+msgstr "Nächste Phase"
+
+msgid "Current stage"
+msgstr "Aktuelle Phase"

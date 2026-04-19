@@ -150,7 +150,6 @@ class StatusUpdateForm(forms.Form):
         widget=forms.RadioSelect,
         initial='update',
     )
-    status = forms.ChoiceField(choices=OrderStatusUpdate.STATUS_CHOICES)
     note = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Describe the update or explain the delay'})

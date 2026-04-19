@@ -571,6 +571,24 @@ a:hover { text-decoration: underline; }
   color: #fff;
 }
 
+.update-type-option--disabled span {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Stage display (read-only status in update form) ── */
+.stage-display {
+  padding: 0.6rem 0;
+}
+
+.stage-display__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
 /* ── Tracking link in timeline ── */
 .timeline-entry__tracking {
   margin-top: 0.6rem;

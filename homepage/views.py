@@ -364,6 +364,27 @@ def _is_factory_user(user):
     return user.groups.filter(name='factory').exists()
 
 
+STATUS_ORDER = [
+    'quote_received', 'in_review', 'quote_sent', 'sampling',
+    'sample_approved', 'in_production', 'quality_check', 'shipped', 'delivered',
+]
+
+
+def _next_update_status(quote):
+    """Return the next status key that hasn't been used in a normal 'update', or None if all done."""
+    used = set(quote.status_updates.filter(update_type='update').values_list('status', flat=True))
+    for s in STATUS_ORDER:
+        if s not in used:
+            return s
+    return None
+
+
+def _latest_update_status(quote):
+    """Return the most recent status key posted as a normal 'update', or None."""
+    last = quote.status_updates.filter(update_type='update').order_by('created_at').last()
+    return last.status if last else None
+
+
 _STATUS_BADGE_COLOURS = {
     'quote_received':  ('rgba(0,0,0,0.06)',      '#6b6760'),
     'in_review':       ('rgba(180,130,0,0.12)',   '#6b4e00'),
@@ -520,10 +541,7 @@ def _build_status_notification_html(first_name, order_name, status_label, status
   <!-- Footer -->
   <tr><td style="padding:24px 0 0;text-align:center">
     <p style="margin:0;font-size:12px;color:#6b6760;line-height:1.8">
-      G2G Textiles &nbsp;&middot;&nbsp; production@gtwog.ch<br>
-      <a href="{portal_url}" style="color:#6b6760;font-size:11px">
-        Manage email preferences
-      </a>
+      G2G Textiles &nbsp;&middot;&nbsp; production@gtwog.ch
     </p>
   </td></tr>
 
@@ -692,6 +710,11 @@ def staff_order(request, pk):
     except QuoteRequest.DoesNotExist:
         raise Http404
 
+    _status_labels = dict(OrderStatusUpdate.STATUS_CHOICES)
+    next_status_key = _next_update_status(quote)
+    current_status_key = _latest_update_status(quote) or STATUS_ORDER[0]
+    pipeline_complete = next_status_key is None
+
     update_form = StatusUpdateForm()
     assign_form = FactoryAssignForm(initial={'factory': quote.assigned_factory})
 
@@ -699,14 +722,28 @@ def staff_order(request, pk):
         if 'post_update' in request.POST:
             update_form = StatusUpdateForm(request.POST, request.FILES)
             if update_form.is_valid():
+                utype = update_form.cleaned_data['update_type']
+                if utype == 'update':
+                    if pipeline_complete:
+                        messages.error(request, _('All status stages have been posted.'))
+                        return redirect('staff_order', pk=pk)
+                    enforced_status = next_status_key
+                else:
+                    enforced_status = current_status_key
+                # Tracking only allowed for shipped updates
+                tracking_number = update_form.cleaned_data.get('tracking_number', '')
+                tracking_url = update_form.cleaned_data.get('tracking_url', '')
+                if enforced_status != 'shipped' or utype != 'update':
+                    tracking_number = ''
+                    tracking_url = ''
                 upd = OrderStatusUpdate.objects.create(
                     quote_request=quote,
-                    status=update_form.cleaned_data['status'],
-                    update_type=update_form.cleaned_data['update_type'],
+                    status=enforced_status,
+                    update_type=utype,
                     note=update_form.cleaned_data['note'],
                     attachment=update_form.cleaned_data.get('attachment'),
-                    tracking_number=update_form.cleaned_data.get('tracking_number', ''),
-                    tracking_url=update_form.cleaned_data.get('tracking_url', ''),
+                    tracking_number=tracking_number,
+                    tracking_url=tracking_url,
                     created_by=request.user,
                 )
                 _send_status_notification(quote, upd)
@@ -726,6 +763,11 @@ def staff_order(request, pk):
         'updates': updates,
         'update_form': update_form,
         'assign_form': assign_form,
+        'next_status_key': next_status_key or '',
+        'next_status_label': _status_labels.get(next_status_key, '') if next_status_key else '',
+        'current_status_key': current_status_key,
+        'current_status_label': _status_labels.get(current_status_key, ''),
+        'pipeline_complete': pipeline_complete,
     })
 
 
@@ -746,19 +788,37 @@ def factory_order(request, pk):
     except QuoteRequest.DoesNotExist:
         raise Http404
 
+    _status_labels = dict(OrderStatusUpdate.STATUS_CHOICES)
+    next_status_key = _next_update_status(quote)
+    current_status_key = _latest_update_status(quote) or STATUS_ORDER[0]
+    pipeline_complete = next_status_key is None
+
     update_form = StatusUpdateForm()
 
     if request.method == 'POST':
         update_form = StatusUpdateForm(request.POST, request.FILES)
         if update_form.is_valid():
+            utype = update_form.cleaned_data['update_type']
+            if utype == 'update':
+                if pipeline_complete:
+                    messages.error(request, _('All status stages have been posted.'))
+                    return redirect('factory_order', pk=pk)
+                enforced_status = next_status_key
+            else:
+                enforced_status = current_status_key
+            tracking_number = update_form.cleaned_data.get('tracking_number', '')
+            tracking_url = update_form.cleaned_data.get('tracking_url', '')
+            if enforced_status != 'shipped' or utype != 'update':
+                tracking_number = ''
+                tracking_url = ''
             upd = OrderStatusUpdate.objects.create(
                 quote_request=quote,
-                status=update_form.cleaned_data['status'],
-                update_type=update_form.cleaned_data['update_type'],
+                status=enforced_status,
+                update_type=utype,
                 note=update_form.cleaned_data['note'],
                 attachment=update_form.cleaned_data.get('attachment'),
-                tracking_number=update_form.cleaned_data.get('tracking_number', ''),
-                tracking_url=update_form.cleaned_data.get('tracking_url', ''),
+                tracking_number=tracking_number,
+                tracking_url=tracking_url,
                 created_by=request.user,
             )
             _send_status_notification(quote, upd)
@@ -770,4 +830,9 @@ def factory_order(request, pk):
         'quote': quote,
         'updates': updates,
         'update_form': update_form,
+        'next_status_key': next_status_key or '',
+        'next_status_label': _status_labels.get(next_status_key, '') if next_status_key else '',
+        'current_status_key': current_status_key,
+        'current_status_label': _status_labels.get(current_status_key, ''),
+        'pipeline_complete': pipeline_complete,
     })
