@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
     ContactSubmission, QuoteRequest, OrderStatusUpdate,
-    Quote, QuoteLineItem,
+    Quote, QuoteLineItem, QuoteSignature,
     SiteSettings, Service, HowItWorksStep, ClientLogo, LegalPage,
     BlogPost, BlogCategory, BlogPostImage,
 )
@@ -220,3 +220,10 @@ class BlogPostAdmin(admin.ModelAdmin):
         if obj.cover_image:
             return format_html('<img src="{}" style="height:40px;border-radius:4px;" />', obj.cover_image.url)
         return '—'
+
+
+@admin.register(QuoteSignature)
+class QuoteSignatureAdmin(admin.ModelAdmin):
+    list_display = ['quote', 'signer_name', 'signer_role', 'signed_at', 'ip_address']
+    list_filter = ['signer_role']
+    readonly_fields = ['quote', 'signer', 'signer_name', 'signer_role', 'signed_at', 'ip_address', 'signature_image']

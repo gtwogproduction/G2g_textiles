@@ -342,6 +342,32 @@ class QuoteLineItem(models.Model):
         verbose_name_plural = 'Quote Line Items'
 
 
+class QuoteSignature(models.Model):
+    ROLE_CUSTOMER = 'customer'
+    ROLE_STAFF = 'g2g_staff'
+    ROLE_CHOICES = [(ROLE_CUSTOMER, 'Customer'), (ROLE_STAFF, 'G2G Staff')]
+
+    quote = models.ForeignKey(Quote, on_delete=models.CASCADE, related_name='signatures')
+    signer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='quote_signatures'
+    )
+    signer_name = models.CharField(max_length=200)
+    signer_role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    signature_image = models.TextField()
+    signed_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['signed_at']
+        unique_together = [('quote', 'signer_role')]
+        verbose_name = 'Quote Signature'
+        verbose_name_plural = 'Quote Signatures'
+
+    def __str__(self):
+        return f"{self.signer_name} ({self.get_signer_role_display()}) — {self.quote.quote_number}"
+
+
 class SiteSettings(models.Model):
     hero_video = models.FileField(
     upload_to='hero/',

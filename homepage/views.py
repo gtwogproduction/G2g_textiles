@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _l
 from .forms import (
@@ -15,7 +15,7 @@ from .forms import (
     StatusUpdateForm, FactoryAssignForm,
     QuoteHeaderForm, QuoteLineItemFormSet,
 )
-from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate, Quote, QuoteLineItem
+from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate, Quote, QuoteLineItem, QuoteSignature
 
 QUOTE_STEPS = [
     ('about',   _l('About You'),            QuoteStep1Form),
@@ -1180,6 +1180,7 @@ def staff_quote_edit(request, quote_pk):
         'is_create': False,
         'default_email_body': DEFAULT_PROFORMA_EMAIL_BODY.format(first_name=customer_name),
         'tech_pack_url': tech_pack_url,
+        'signatures': quote.signatures.all(),
     })
 
 
@@ -1213,6 +1214,7 @@ def staff_quote_print(request, quote_pk):
     return render(request, 'homepage/portal/staff_quote_print.html', {
         'quote': quote,
         'line_items': line_items,
+        'signatures': quote.signatures.all(),
     })
 
 
@@ -1228,11 +1230,61 @@ def customer_quote_view(request, pk):
     if quote.status == 'draft':
         raise Http404
     line_items = quote.line_items.all()
+    signatures = quote.signatures.all()
+    can_sign = not signatures.filter(signer_role=QuoteSignature.ROLE_CUSTOMER).exists()
     return render(request, 'homepage/portal/customer_quote.html', {
         'quote': quote,
         'quote_request': quote_request,
         'line_items': line_items,
+        'signatures': signatures,
+        'can_sign': can_sign,
     })
+
+
+@login_required
+def quote_sign(request, quote_pk):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    try:
+        quote = Quote.objects.get(pk=quote_pk)
+    except Quote.DoesNotExist:
+        raise Http404
+
+    if quote.status == 'draft':
+        raise Http404
+
+    # Determine role and check access
+    if _is_g2g_staff(request.user):
+        role = QuoteSignature.ROLE_STAFF
+    elif _is_customer(request.user):
+        # Customer may only sign their own quote
+        if not QuoteRequest.objects.filter(pk=quote.quote_request_id, customer=request.user).exists():
+            return JsonResponse({'error': 'Forbidden'}, status=403)
+        role = QuoteSignature.ROLE_CUSTOMER
+    else:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    if QuoteSignature.objects.filter(quote=quote, signer_role=role).exists():
+        return JsonResponse({'error': 'Already signed'}, status=409)
+
+    sig_image = request.POST.get('signature_image', '').strip()
+    if not sig_image or not sig_image.startswith('data:image/png;base64,'):
+        return JsonResponse({'error': 'Invalid signature format'}, status=400)
+
+    signer_name = request.user.get_full_name() or request.user.username
+    QuoteSignature.objects.create(
+        quote=quote,
+        signer=request.user,
+        signer_name=signer_name,
+        signer_role=role,
+        signature_image=sig_image,
+        ip_address=request.META.get('REMOTE_ADDR'),
+    )
+
+    if role == QuoteSignature.ROLE_CUSTOMER:
+        return redirect('customer_quote_view', pk=quote.quote_request_id)
+    return redirect('staff_quote_edit', quote_pk=quote.pk)
 
 
 @login_required

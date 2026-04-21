@@ -125,6 +125,23 @@
         {% if quote_request.get_print_method_display %}<li>{{ quote_request.get_print_method_display }}</li>{% endif %}
       </ul>
     </div>
+
+    {% if signatures %}
+    <div class="portal-card">
+      <h2>{% trans "Signatures" %}</h2>
+      {% for sig in signatures %}
+      <div style="margin-bottom:1rem">
+        <img src="{{ sig.signature_image }}" alt="{% trans 'Signature' %}" style="max-width:100%;border:1px solid var(--border);border-radius:var(--radius);display:block;margin-bottom:0.4rem">
+        <p style="font-size:0.82rem;color:var(--muted)">{{ sig.signer_name }} ({{ sig.get_signer_role_display }}) &mdash; {{ sig.signed_at|date:"d.m.Y H:i" }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% elif quote_obj %}
+    <div class="portal-card">
+      <h2>{% trans "Signatures" %}</h2>
+      <p style="font-size:0.88rem;color:var(--muted)">{% trans "No signatures yet." %}</p>
+    </div>
+    {% endif %}
   </div>
 
 </div>

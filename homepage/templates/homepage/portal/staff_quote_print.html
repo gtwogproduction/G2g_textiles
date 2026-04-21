@@ -191,6 +191,49 @@
       .print-wrap { padding: 0; max-width: 100%; }
     }
 
+    /* Signatures */
+    .print-signatures {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #eee;
+    }
+
+    .print-signatures h4 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b6760;
+      margin-bottom: 1rem;
+    }
+
+    .sig-grid {
+      display: flex;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .sig-block {
+      text-align: center;
+      min-width: 180px;
+    }
+
+    .sig-block img {
+      max-width: 200px;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .sig-block p {
+      font-size: 0.82rem;
+      color: #1a1a1a;
+      line-height: 1.5;
+    }
+
+    .sig-block small { color: #6b6760; font-size: 0.76rem; }
+
     @page { size: A4; margin: 1.5cm; }
   </style>
 </head>
@@ -268,6 +311,20 @@
   <div class="print-notes">
     <h4>{% trans "Customer notes" %}</h4>
     <p>{{ quote.notes_customer|linebreaksbr }}</p>
+  </div>
+  {% endif %}
+
+  {% if signatures %}
+  <div class="print-signatures">
+    <h4>{% trans "Signatures" %}</h4>
+    <div class="sig-grid">
+      {% for sig in signatures %}
+      <div class="sig-block">
+        <img src="{{ sig.signature_image }}" alt="{% trans 'Signature' %}">
+        <p>{{ sig.signer_name }}<br><small>{{ sig.get_signer_role_display }} &mdash; {{ sig.signed_at|date:"d.m.Y H:i" }}</small></p>
+      </div>
+      {% endfor %}
+    </div>
   </div>
   {% endif %}
 
