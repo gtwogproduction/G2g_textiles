@@ -20,7 +20,7 @@ async def upload_cover_image(file_bytes: bytes, filename: str) -> dict:
     Uploads image bytes to Cloudinary under the blog/ folder.
     Returns {"public_id": "blog/xyz", "secure_url": "https://..."}
     """
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     def _upload():
         return cloudinary.uploader.upload(

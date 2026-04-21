@@ -1,7 +1,3 @@
-"""
-4-phase AI pipeline: SEO Strategist → Content Writer → QA Editor → German Translator.
-Each phase streams tokens via an async emit() callback.
-"""
 from __future__ import annotations
 import json
 import re
@@ -14,17 +10,8 @@ import anthropic
 SITE_URL = os.environ.get("SITE_URL", "https://gtwog.ch")
 MODEL = "claude-sonnet-4-6"
 
-client = None
+client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
-
-def get_client():
-    global client
-    if client is None:
-        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    return client
-
-
-# ── JSON utilities ─────────────────────────────────────────────────────────────
 
 def _repair_json(s: str) -> str:
     return re.sub(r",\s*([}\]])", r"\1", s)
@@ -50,57 +37,36 @@ def _extract_json(raw: str) -> dict | None:
         return None
 
 
-# ── Streaming helper with one retry on bad JSON ───────────────────────────────
+async def _stream_phase(system: str, messages: list, max_tokens: int, emit, phase_name: str) -> tuple[dict | None, str]:
+    loop = asyncio.get_running_loop()
 
-async def _stream_phase(system: str, messages: list, max_tokens: int, emit, phase_name: str, on_text=None) -> tuple[dict | None, str]:
-    c = get_client()
-    raw = ""
+    async def _stream_into_queue(msgs: list) -> str:
+        raw = ""
+        queue: asyncio.Queue = asyncio.Queue()
 
-    def _run_stream(msgs):
-        result = ""
-        with c.messages.stream(model=MODEL, max_tokens=max_tokens, system=system, messages=msgs) as stream:
-            for text in stream.text_stream:
-                result += text
-                if on_text:
-                    on_text(text)
-        return result
+        def _worker():
+            nonlocal raw
+            with client.messages.stream(model=MODEL, max_tokens=max_tokens, system=system, messages=msgs) as stream:
+                for text in stream.text_stream:
+                    raw += text
+                    loop.call_soon_threadsafe(queue.put_nowait, text)
+            loop.call_soon_threadsafe(queue.put_nowait, None)
 
-    loop = asyncio.get_event_loop()
+        future = loop.run_in_executor(None, _worker)
+        while True:
+            chunk = await queue.get()
+            if chunk is None:
+                break
+            await emit({"type": f"{phase_name}_delta", "text": chunk})
+        await future
+        return raw
 
-    # Wrap sync streaming in executor so we can still await emit()
-    # We collect chunks and flush after the blocking call completes.
-    # For real-time streaming we use a thread + queue pattern.
-    queue: asyncio.Queue = asyncio.Queue()
-
-    def _run_with_queue(msgs):
-        nonlocal raw
-        c2 = get_client()
-        with c2.messages.stream(model=MODEL, max_tokens=max_tokens, system=system, messages=msgs) as stream:
-            for text in stream.text_stream:
-                raw += text
-                loop.call_soon_threadsafe(queue.put_nowait, text)
-        loop.call_soon_threadsafe(queue.put_nowait, None)  # sentinel
-
-    raw = ""
-    thread_future = loop.run_in_executor(None, _run_with_queue, messages)
-
-    while True:
-        chunk = await queue.get()
-        if chunk is None:
-            break
-        await emit({"type": f"{phase_name}_delta", "text": chunk})
-
-    await thread_future
-
+    raw = await _stream_into_queue(messages)
     result = _extract_json(raw)
     if result:
         return result, raw
 
-    # One retry
     await emit({"type": "status", "text": f"{phase_name}: invalid JSON — retrying..."})
-    retry_raw = ""
-    retry_queue: asyncio.Queue = asyncio.Queue()
-
     retry_messages = [
         *messages,
         {"role": "assistant", "content": raw},
@@ -113,36 +79,14 @@ async def _stream_phase(system: str, messages: list, max_tokens: int, emit, phas
             ),
         },
     ]
+    retry_raw = await _stream_into_queue(retry_messages)
+    return _extract_json(retry_raw), retry_raw
 
-    def _retry_with_queue(msgs):
-        nonlocal retry_raw
-        c2 = get_client()
-        with c2.messages.stream(model=MODEL, max_tokens=max_tokens, system=system, messages=msgs) as stream:
-            for text in stream.text_stream:
-                retry_raw += text
-                loop.call_soon_threadsafe(retry_queue.put_nowait, text)
-        loop.call_soon_threadsafe(retry_queue.put_nowait, None)
-
-    retry_future = loop.run_in_executor(None, _retry_with_queue, retry_messages)
-
-    while True:
-        chunk = await retry_queue.get()
-        if chunk is None:
-            break
-        await emit({"type": f"{phase_name}_delta", "text": chunk})
-
-    await retry_future
-
-    result = _extract_json(retry_raw)
-    return result, retry_raw
-
-
-# ── URL scraping ──────────────────────────────────────────────────────────────
 
 async def scrape_url(url: str) -> dict:
     try:
-        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
-            r = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as http:
+            r = await http.get(url, headers={"User-Agent": "Mozilla/5.0"})
             r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
         for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
@@ -159,22 +103,16 @@ async def scrape_url(url: str) -> dict:
         return {"url": url, "title": url, "text": f"[Could not fetch: {e}]"}
 
 
-# ── Main pipeline ─────────────────────────────────────────────────────────────
-
 async def run_pipeline(topic: str, post_type: str, category_name: str, reference_urls: list[str], recent_posts: list[dict], emit):
-    """
-    Runs the 4-phase pipeline and calls emit() with SSE event dicts.
-    Emits {"type": "done", "article": {...}} on success or {"type": "error", "text": "..."} on failure.
-    """
     try:
-        # ── Gather context ────────────────────────────────────────────────────
         await emit({"type": "status", "text": "Gathering context..."})
         scraped = await asyncio.gather(*[scrape_url(u) for u in reference_urls])
 
-        context_lines = []
-        for item in scraped:
-            if item["text"] and not item["text"].startswith("[Could not fetch"):
-                context_lines.append(f'### Reference: "{item["title"]}"\nURL: {item["url"]}\n{item["text"]}')
+        context_lines = [
+            f'### Reference: "{item["title"]}"\nURL: {item["url"]}\n{item["text"]}'
+            for item in scraped
+            if item["text"] and not item["text"].startswith("[Could not fetch")
+        ]
 
         internal_links_context = ""
         if recent_posts:
@@ -183,7 +121,6 @@ async def run_pipeline(topic: str, post_type: str, category_name: str, reference
 
         context_block = "\n\n".join(context_lines)
 
-        # ── PHASE 1: SEO STRATEGIST ───────────────────────────────────────────
         await emit({"type": "phase", "phase": "seo", "label": "SEO Strategist"})
 
         seo_system = f"""You are a senior SEO strategist specialising in B2B textile and custom clothing manufacturing content.
@@ -230,17 +167,10 @@ Category: {category_name or "General"}
 
 {context_block}"""
 
-        seo_brief, _ = await _stream_phase(
-            seo_system,
-            [{"role": "user", "content": seo_user}],
-            max_tokens=1500,
-            emit=emit,
-            phase_name="seo",
-        )
+        seo_brief, _ = await _stream_phase(seo_system, [{"role": "user", "content": seo_user}], max_tokens=1500, emit=emit, phase_name="seo")
         seo_brief = seo_brief or {}
         await emit({"type": "seo_done", "brief": seo_brief})
 
-        # ── PHASE 2: CONTENT WRITER ───────────────────────────────────────────
         await emit({"type": "phase", "phase": "writing", "label": "Content Writer"})
 
         writer_system = f"""You are an expert content writer for gtwog.ch, a B2B custom clothing manufacturer in Switzerland.
@@ -288,16 +218,9 @@ Return ONLY valid JSON:
 
 {context_block}"""
 
-        article, _ = await _stream_phase(
-            writer_system,
-            [{"role": "user", "content": writer_user}],
-            max_tokens=4096,
-            emit=emit,
-            phase_name="writing",
-        )
+        article, _ = await _stream_phase(writer_system, [{"role": "user", "content": writer_user}], max_tokens=4096, emit=emit, phase_name="writing")
         article = article or {}
 
-        # ── PHASE 3: QA EDITOR ───────────────────────────────────────────────
         await emit({"type": "phase", "phase": "qa", "label": "QA Editor"})
 
         qa_system = f"""You are a QA editor for gtwog.ch B2B blog content.
@@ -334,20 +257,12 @@ CRITICAL: Use single quotes for ALL HTML attributes. Return ONLY valid JSON:
 
 Primary keyword from SEO brief: {seo_brief.get("primary_keyword", "")}"""
 
-        qa_result, qa_raw = await _stream_phase(
-            qa_system,
-            [{"role": "user", "content": qa_user}],
-            max_tokens=4096,
-            emit=emit,
-            phase_name="qa",
-        )
-
+        qa_result, _ = await _stream_phase(qa_system, [{"role": "user", "content": qa_user}], max_tokens=4096, emit=emit, phase_name="qa")
         if qa_result:
             article = qa_result
         else:
             await emit({"type": "warning", "text": "QA phase could not parse — using writer output unchanged."})
 
-        # ── PHASE 4: GERMAN TRANSLATOR ────────────────────────────────────────
         await emit({"type": "phase", "phase": "translation", "label": "German Translator"})
 
         translation_system = """You are a professional translator specialising in B2B textile and manufacturing content.
@@ -380,17 +295,10 @@ Excerpt: {article.get("excerpt", "")}
 Body:
 {article.get("body", "")}"""
 
-        translation_result, _ = await _stream_phase(
-            translation_system,
-            [{"role": "user", "content": translation_user}],
-            max_tokens=4096,
-            emit=emit,
-            phase_name="translation",
-        )
+        translation_result, _ = await _stream_phase(translation_system, [{"role": "user", "content": translation_user}], max_tokens=4096, emit=emit, phase_name="translation")
         translation_result = translation_result or {}
 
-        # ── Assemble final output ─────────────────────────────────────────────
-        final = {
+        await emit({"type": "done", "article": {
             "title": article.get("title", ""),
             "title_de": translation_result.get("title_de", ""),
             "body": article.get("body", ""),
@@ -401,10 +309,8 @@ Body:
             "meta_title": article.get("meta_title", ""),
             "meta_description": article.get("meta_description", ""),
             "fixes": article.get("fixes", []),
-        }
-
-        await emit({"type": "done", "article": final})
-        await emit(None)  # sentinel
+        }})
+        await emit(None)
 
     except Exception as e:
         await emit({"type": "error", "text": str(e)})

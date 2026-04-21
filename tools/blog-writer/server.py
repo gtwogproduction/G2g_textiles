@@ -46,11 +46,12 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 PUBLIC_DIR = Path(__file__).parent / "public"
 app.mount("/static", StaticFiles(directory=str(PUBLIC_DIR)), name="static")
 
+_INDEX_HTML = (PUBLIC_DIR / "index.html").read_text()
 
-# ── HTML root ─────────────────────────────────────────────────────────────────
+
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return (PUBLIC_DIR / "index.html").read_text()
+    return _INDEX_HTML
 
 
 # ── Data endpoints ────────────────────────────────────────────────────────────
@@ -84,7 +85,6 @@ async def api_upload_image(image: UploadFile = File(...)):
 async def api_generate(
     topic: str = Form(...),
     post_type: str = Form("article"),
-    category_id: str = Form(""),
     category_name: str = Form(""),
     urls: str = Form("[]"),
 ):
@@ -152,12 +152,12 @@ async def api_publish(payload: PublishPayload):
         "slug": slug,
         "post_type": payload.post_type,
         "category_id": payload.category_id,
-        "excerpt": payload.excerpt[:300] if payload.excerpt else "",
-        "excerpt_de": payload.excerpt_de[:300] if payload.excerpt_de else "",
+        "excerpt": payload.excerpt,
+        "excerpt_de": payload.excerpt_de,
         "body": payload.body,
         "body_de": payload.body_de,
-        "meta_title": payload.meta_title[:60] if payload.meta_title else "",
-        "meta_description": payload.meta_description[:160] if payload.meta_description else "",
+        "meta_title": payload.meta_title,
+        "meta_description": payload.meta_description,
         "cover_public_id": payload.cover_public_id,
     })
     return result

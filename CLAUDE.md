@@ -160,3 +160,82 @@ The site supports English and German. Key patterns:
 - No JS framework — vanilla JS only (`main.js` for nav/scroll animations, `quote.js` for conditional field visibility in the wizard)
 - Five CSS files: `style.css` (global), `quote.css` (wizard), `contact.css`, `blog.css`, `portal.css` (portal)
 - Google Fonts: Bebas Neue, DM Sans
+
+---
+
+## Blog Writer Tool (`tools/blog-writer/`)
+
+A dev-only, standalone tool for generating bilingual (EN + DE) blog articles using a 4-phase Claude AI pipeline. Runs locally at `http://localhost:3001` and writes draft `BlogPost` records directly to the **live Render PostgreSQL database**.
+
+### How to Run
+
+```bash
+# From project root, with project venv active
+cd tools/blog-writer
+pip install -r requirements.txt   # first time only
+pip install psycopg2-binary        # PostgreSQL driver
+cp .env.example .env              # then fill in keys
+uvicorn server:app --port 3001 --reload
+# Open http://localhost:3001
+```
+
+### Environment (`.env`)
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+DJANGO_PROJECT_PATH=/Users/kiram/Desktop/Webdevelopment/G2g_textiles
+DJANGO_SETTINGS_MODULE=g2g_textiles.settings
+DATABASE_URL=<External Database URL from Render PostgreSQL service page>
+SITE_URL=https://gtwog.ch
+PORT=3001
+```
+
+Cloudinary keys (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`) are loaded automatically from the main project's `.env` — no need to duplicate them.
+
+`DATABASE_URL` must be the **External** URL from Render's PostgreSQL service page (not the internal hostname, which is only accessible within the Render network).
+
+### Architecture
+
+FastAPI app (`server.py`) that bootstraps Django ORM via `django.setup()` so it can read/write the live database directly without going through the Django web server.
+
+| File | Purpose |
+|------|---------|
+| `server.py` | FastAPI app, Django bootstrap, all route handlers |
+| `pipeline.py` | 4-phase Claude pipeline with SSE streaming and JSON retry |
+| `django_client.py` | ORM helpers: `get_categories`, `get_recent_posts`, `create_draft_post` |
+| `cloudinary_client.py` | Async cover image upload to Cloudinary |
+| `public/index.html` | SPA — Write tab + Reference tab |
+| `public/app.js` | SSE client, phase cards, review/edit panel, save flow |
+| `public/style.css` | UI styles |
+
+### API Endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/` | Serves `public/index.html` |
+| GET | `/api/categories` | All `BlogCategory` objects |
+| GET | `/api/posts` | Recent `BlogPost` list for Reference tab |
+| POST | `/api/upload-image` | Upload cover image → Cloudinary, return `{public_id, secure_url}` |
+| POST | `/api/generate` | **SSE stream** — runs 4-phase pipeline |
+| POST | `/api/publish` | Create draft `BlogPost`, return `{id, slug, admin_url}` |
+| POST | `/api/scrape-url` | Scrape reference URL → `{title, text}` |
+
+### AI Pipeline (4 phases)
+
+All phases stream tokens to the browser in real time via SSE. Each phase has one auto-retry on JSON parse failure.
+
+1. **SEO Strategist** — produces keyword strategy, heading structure, internal link suggestions, meta framework
+2. **Content Writer** — writes full EN article HTML using the SEO brief; injects G2G domain knowledge (fabrics, techniques, MOQ, certifications, production countries)
+3. **QA Editor** — checks headings, fixes internal links to absolute `https://gtwog.ch` URLs, enforces excerpt/meta char limits, fixes B2B tone
+4. **German Translator** — translates all visible text to Hochdeutsch; preserves all HTML tags, URLs, brand names, and technical acronyms
+
+### UI Flow
+
+**Write tab (3 steps)**
+1. Enter topic, post type, category, optional reference URLs, optional cover image → Generate
+2. Watch 4 phase cards stream with live progress bar
+3. Edit EN + DE content inline (contenteditable) → fill meta fields → Save as Draft
+
+**Reference tab** — table of recent posts with client-side title filter; each row links to the Django admin edit page.
+
+Saved posts appear in Django admin at `/en/admin/homepage/blogpost/` with `is_published=False`.

@@ -1,19 +1,14 @@
-/* G2G Blog Writer — frontend logic */
-
-// ── State ─────────────────────────────────────────────────────────────────────
 const state = {
   urls: [],
   coverFile: null,
   coverPublicId: '',
   coverSecureUrl: '',
   article: null,
-  currentMode: 'write',
 };
 
 let allPosts = [];
 let categories = [];
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   await Promise.all([loadCategories(), loadPosts()]);
 }
@@ -31,7 +26,6 @@ async function loadCategories() {
 function populateCategorySelects() {
   const selects = [document.getElementById('category'), document.getElementById('meta-category')];
   selects.forEach(sel => {
-    // Clear all except first (empty) option
     while (sel.options.length > 1) sel.remove(1);
     categories.forEach(c => {
       const opt = document.createElement('option');
@@ -52,21 +46,14 @@ async function loadPosts() {
   }
 }
 
-// ── Mode switching ────────────────────────────────────────────────────────────
 function switchMode(mode) {
-  state.currentMode = mode;
   document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.mode-tab').forEach(el => el.classList.remove('active'));
   document.getElementById(`mode-${mode}`).classList.add('active');
   document.querySelectorAll('.mode-tab').forEach(el => {
-    if (el.textContent.toLowerCase().includes(mode === 'write' ? 'write' : 'reference')) {
-      el.classList.add('active');
-    }
+    el.classList.toggle('active', el.textContent.toLowerCase().includes(mode === 'write' ? 'write' : 'reference'));
   });
-  if (mode === 'reference') loadPosts();
 }
 
-// ── URL tag management ────────────────────────────────────────────────────────
 function addUrl() {
   const input = document.getElementById('url-input');
   const url = input.value.trim();
@@ -97,7 +84,6 @@ function renderUrlTags() {
   });
 }
 
-// ── Cover image ───────────────────────────────────────────────────────────────
 function handleCoverSelect(input) {
   const file = input.files[0];
   if (!file) return;
@@ -108,8 +94,7 @@ function handleCoverSelect(input) {
   const reader = new FileReader();
   reader.onload = e => {
     document.getElementById('upload-placeholder').style.display = 'none';
-    const preview = document.getElementById('upload-preview');
-    preview.style.display = 'block';
+    document.getElementById('upload-preview').style.display = 'block';
     document.getElementById('cover-preview-img').src = e.target.result;
     document.getElementById('upload-area').classList.add('has-file');
   };
@@ -135,14 +120,12 @@ function removeCover() {
   document.getElementById('meta-cover-img').src = '';
 }
 
-// ── Generation ────────────────────────────────────────────────────────────────
 async function startGeneration() {
   const topic = document.getElementById('topic').value.trim();
   if (!topic) { alert('Please enter a topic.'); return; }
 
   document.getElementById('btn-generate').disabled = true;
 
-  // Upload cover if provided
   if (state.coverFile) {
     try {
       await uploadCoverImage();
@@ -153,21 +136,18 @@ async function startGeneration() {
     }
   }
 
-  // Switch to step 2
   showPanel(2);
   resetPhaseCards();
   setStatus('Starting pipeline...', '');
 
   const postType = document.getElementById('post-type').value;
   const catSel = document.getElementById('category');
-  const categoryId = catSel.value;
-  const categoryName = catSel.options[catSel.selectedIndex]?.text || '';
+  const categoryName = catSel.value ? (catSel.options[catSel.selectedIndex]?.text || '') : '';
 
   const fd = new FormData();
   fd.append('topic', topic);
   fd.append('post_type', postType);
-  fd.append('category_id', categoryId);
-  fd.append('category_name', categoryId ? categoryName : '');
+  fd.append('category_name', categoryName);
   fd.append('urls', JSON.stringify(state.urls));
 
   const es = await fetch('/api/generate', { method: 'POST', body: fd });
@@ -183,16 +163,11 @@ async function startGeneration() {
     buffer = lines.pop();
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
-      try {
-        const event = JSON.parse(line.slice(6));
-        handleEvent(event);
-      } catch {}
+      try { handleEvent(JSON.parse(line.slice(6))); } catch {}
     }
   }
 }
 
-// ── SSE event handler ─────────────────────────────────────────────────────────
-const phaseMap = { seo: 'seo', writing: 'writing', qa: 'qa', translation: 'translation' };
 const phaseProgress = { seo: 25, writing: 55, qa: 80, translation: 100 };
 
 function handleEvent(evt) {
@@ -208,45 +183,27 @@ function handleEvent(evt) {
       setProgress(phaseProgress[evt.phase] - 15 || 10);
       break;
     }
-    case 'seo_delta':
-      appendStream('stream-seo', evt.text);
-      break;
-    case 'writing_delta':
-      appendStream('stream-writing', evt.text);
-      break;
-    case 'qa_delta':
-      appendStream('stream-qa', evt.text);
-      break;
-    case 'translation_delta':
-      appendStream('stream-translation', evt.text);
-      break;
+    case 'seo_delta':      appendStream('stream-seo', evt.text); break;
+    case 'writing_delta':  appendStream('stream-writing', evt.text); break;
+    case 'qa_delta':       appendStream('stream-qa', evt.text); break;
+    case 'translation_delta': appendStream('stream-translation', evt.text); break;
     case 'seo_done':
       setPhaseState('phase-seo', 'done', 'Done');
       setProgress(25);
       break;
-    case 'done':
-      handleDone(evt.article);
-      break;
-    case 'warning':
-      setStatus('Warning: ' + evt.text, '');
-      break;
-    case 'error':
-      setStatus('Error: ' + evt.text, 'error');
-      break;
+    case 'done':    handleDone(evt.article); break;
+    case 'warning': setStatus('Warning: ' + evt.text, ''); break;
+    case 'error':   setStatus('Error: ' + evt.text, 'error'); break;
   }
 }
 
 function handleDone(article) {
-  // Mark all phases done
-  ['phase-seo', 'phase-writing', 'phase-qa', 'phase-translation'].forEach(id => {
-    setPhaseState(id, 'done', 'Done');
-  });
+  ['phase-seo', 'phase-writing', 'phase-qa', 'phase-translation'].forEach(id => setPhaseState(id, 'done', 'Done'));
   setProgress(100);
   setStatus('Done! Review your article below.', 'done');
 
   state.article = article;
 
-  // Populate review panel
   document.getElementById('edit-title').textContent = article.title || '';
   document.getElementById('edit-excerpt').textContent = article.excerpt || '';
   document.getElementById('edit-body').innerHTML = article.body || '';
@@ -263,28 +220,22 @@ function handleDone(article) {
   watchCharCounter('edit-excerpt', 'excerpt-counter', 300);
   watchCharCounter('edit-excerpt-de', 'excerpt-de-counter', 300);
 
-  // Sync post type & category
   document.getElementById('meta-post-type').value = document.getElementById('post-type').value;
   document.getElementById('meta-category').value = document.getElementById('category').value;
 
-  // Fixes
   if (article.fixes && article.fixes.length) {
-    const list = document.getElementById('fixes-list');
-    list.innerHTML = article.fixes.map(f => `<li>${f}</li>`).join('');
+    document.getElementById('fixes-list').innerHTML = article.fixes.map(f => `<li>${f}</li>`).join('');
     document.getElementById('fixes-wrap').classList.remove('hidden');
   }
 
-  // Cover image
   if (state.coverSecureUrl) {
     document.getElementById('meta-cover-img').src = state.coverSecureUrl;
     document.getElementById('cover-meta-wrap').style.display = 'block';
   }
 
-  // Transition after a short pause
   setTimeout(() => showPanel(3), 600);
 }
 
-// ── Save draft ────────────────────────────────────────────────────────────────
 async function saveDraft() {
   const btn = document.getElementById('btn-save');
   btn.disabled = true;
@@ -298,12 +249,12 @@ async function saveDraft() {
     slug: document.getElementById('meta-slug').value.trim(),
     post_type: document.getElementById('meta-post-type').value,
     category_id: catSel.value ? parseInt(catSel.value) : null,
-    excerpt: document.getElementById('edit-excerpt').textContent.trim().slice(0, 300),
-    excerpt_de: document.getElementById('edit-excerpt-de').textContent.trim().slice(0, 300),
+    excerpt: document.getElementById('edit-excerpt').textContent.trim(),
+    excerpt_de: document.getElementById('edit-excerpt-de').textContent.trim(),
     body: document.getElementById('edit-body').innerHTML,
     body_de: document.getElementById('edit-body-de').innerHTML,
-    meta_title: document.getElementById('meta-title').value.slice(0, 60),
-    meta_description: document.getElementById('meta-desc').value.slice(0, 160),
+    meta_title: document.getElementById('meta-title').value,
+    meta_description: document.getElementById('meta-desc').value,
     cover_public_id: state.coverPublicId || '',
   };
 
@@ -318,9 +269,7 @@ async function saveDraft() {
       throw new Error(err.detail || 'Save failed');
     }
     const data = await res.json();
-    const adminUrl = `http://localhost:8000${data.admin_url}`;
-    document.getElementById('save-admin-link').href = adminUrl;
-    document.getElementById('save-admin-link').textContent = 'Open in Django Admin →';
+    document.getElementById('save-admin-link').href = `http://localhost:8000${data.admin_url}`;
     document.getElementById('save-result').classList.remove('hidden');
     btn.textContent = 'Saved ✓';
   } catch (e) {
@@ -330,7 +279,6 @@ async function saveDraft() {
   }
 }
 
-// ── Reference table ───────────────────────────────────────────────────────────
 function renderRefTable(posts) {
   const tbody = document.getElementById('ref-tbody');
   if (!posts.length) {
@@ -354,7 +302,6 @@ function filterRef(q) {
   renderRefTable(lower ? allPosts.filter(p => p.title.toLowerCase().includes(lower)) : allPosts);
 }
 
-// ── UI helpers ────────────────────────────────────────────────────────────────
 function showPanel(n) {
   document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
   document.getElementById(`panel-${n}`).classList.add('active');
@@ -382,13 +329,8 @@ function setPhaseState(id, state, badgeText) {
   card.querySelector('.phase-badge').textContent = badgeText;
 }
 
-function openPhase(id) {
-  document.getElementById(id).classList.add('open');
-}
-
-function togglePhase(id) {
-  document.getElementById(id).classList.toggle('open');
-}
+function openPhase(id) { document.getElementById(id).classList.add('open'); }
+function togglePhase(id) { document.getElementById(id).classList.toggle('open'); }
 
 function appendStream(id, text) {
   const el = document.getElementById(id);
@@ -414,24 +356,21 @@ function toggleCollapse(id) {
   chevron.textContent = body.classList.contains('open') ? '▼' : '▶';
 }
 
-function updateCounter(inputId, counterId, max) {
-  const el = document.getElementById(inputId);
-  const counter = document.getElementById(counterId);
-  const len = el.value ? el.value.length : (el.textContent || '').length;
+function _setCounter(el, counter, max) {
+  const len = (el.value !== undefined ? el.value : el.textContent || '').length;
   counter.textContent = `${len} / ${max}`;
   counter.classList.toggle('over', len > max);
+}
+
+function updateCounter(inputId, counterId, max) {
+  _setCounter(document.getElementById(inputId), document.getElementById(counterId), max);
 }
 
 function watchCharCounter(editId, counterId, max) {
   const el = document.getElementById(editId);
   const counter = document.getElementById(counterId);
-  const update = () => {
-    const len = el.textContent.length;
-    counter.textContent = `${len} / ${max}`;
-    counter.classList.toggle('over', len > max);
-  };
-  el.addEventListener('input', update);
-  update();
+  el.addEventListener('input', () => _setCounter(el, counter, max));
+  _setCounter(el, counter, max);
 }
 
 function startOver() {
@@ -462,5 +401,4 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
 init();
