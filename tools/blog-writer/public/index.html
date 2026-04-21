@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog Writer — G2G Textiles</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <span class="brand">G2G TEXTILES</span>
+      <span class="brand-sep"></span>
+      <span class="tool-name">Blog Writer</span>
+    </div>
+    <nav class="mode-tabs">
+      <button class="mode-tab active" onclick="switchMode('write')">✍️ Write New</button>
+      <button class="mode-tab" onclick="switchMode('reference')">📋 Reference</button>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ── WRITE MODE ─────────────────────────────────────────────────────── -->
+    <div class="mode-section active" id="mode-write">
+
+      <!-- Step indicator -->
+      <div class="steps" id="steps">
+        <div class="step active" id="step-1">
+          <span>1</span><span class="step-label">Inputs</span>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="step-2">
+          <span>2</span><span class="step-label">Generate</span>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="step-3">
+          <span>3</span><span class="step-label">Review & Save</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Inputs -->
+      <div class="panel active" id="panel-1">
+        <div class="card">
+          <div class="card-body">
+            <h2 class="section-title">Article Inputs</h2>
+
+            <div class="field">
+              <label for="topic">Topic / Brief <span class="required">*</span></label>
+              <textarea id="topic" rows="4" placeholder="e.g. 'A guide to GOTS certification — what it means for your brand and how to find certified manufacturers in Europe.'"></textarea>
+            </div>
+
+            <div class="row">
+              <div class="field col-main">
+                <label for="post-type">Post Type</label>
+                <select id="post-type">
+                  <option value="article">Article / Guide</option>
+                  <option value="case_study">Case Study</option>
+                  <option value="video">Video Post</option>
+                </select>
+              </div>
+              <div class="field col-main">
+                <label for="category">Category</label>
+                <select id="category">
+                  <option value="">— No category —</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Reference URLs</label>
+              <p class="hint">Add URLs to articles, reports, or resources for the AI to reference.</p>
+              <div id="url-list" class="tag-list"></div>
+              <div class="input-row mt-8">
+                <input type="url" id="url-input" placeholder="https://example.com/article">
+                <button class="btn-secondary" onclick="addUrl()">Add</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Cover Image <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+              <div class="upload-area" id="upload-area" onclick="document.getElementById('cover-input').click()">
+                <div id="upload-placeholder">Click to upload a cover image (JPG, PNG, WebP)</div>
+                <div class="upload-preview" id="upload-preview">
+                  <img id="cover-preview-img" src="" alt="Cover preview">
+                </div>
+              </div>
+              <input type="file" id="cover-input" accept="image/jpeg,image/png,image/webp" onchange="handleCoverSelect(this)">
+            </div>
+
+            <div class="flex-end mt-16">
+              <button class="btn-primary" id="btn-generate" onclick="startGeneration()">
+                Generate Article →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Generation -->
+      <div class="panel" id="panel-2">
+        <div class="status-bar" id="status-bar">Starting pipeline...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+        <div class="phase-card" id="phase-seo">
+          <div class="phase-header" onclick="togglePhase('phase-seo')">
+            <div class="phase-title-row">
+              <div class="phase-num">1</div>
+              <span class="phase-label">SEO Strategist</span>
+              <span class="phase-badge">Waiting</span>
+            </div>
+            <span class="phase-chevron">▼</span>
+          </div>
+          <div class="phase-body">
+            <div class="phase-stream" id="stream-seo"></div>
+          </div>
+        </div>
+
+        <div class="phase-card" id="phase-writing">
+          <div class="phase-header" onclick="togglePhase('phase-writing')">
+            <div class="phase-title-row">
+              <div class="phase-num">2</div>
+              <span class="phase-label">Content Writer</span>
+              <span class="phase-badge">Waiting</span>
+            </div>
+            <span class="phase-chevron">▼</span>
+          </div>
+          <div class="phase-body">
+            <div class="phase-stream" id="stream-writing"></div>
+          </div>
+        </div>
+
+        <div class="phase-card" id="phase-qa">
+          <div class="phase-header" onclick="togglePhase('phase-qa')">
+            <div class="phase-title-row">
+              <div class="phase-num">3</div>
+              <span class="phase-label">QA Editor</span>
+              <span class="phase-badge">Waiting</span>
+            </div>
+            <span class="phase-chevron">▼</span>
+          </div>
+          <div class="phase-body">
+            <div class="phase-stream" id="stream-qa"></div>
+          </div>
+        </div>
+
+        <div class="phase-card" id="phase-translation">
+          <div class="phase-header" onclick="togglePhase('phase-translation')">
+            <div class="phase-title-row">
+              <div class="phase-num">4</div>
+              <span class="phase-label">German Translator</span>
+              <span class="phase-badge">Waiting</span>
+            </div>
+            <span class="phase-chevron">▼</span>
+          </div>
+          <div class="phase-body">
+            <div class="phase-stream" id="stream-translation"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Review & Save -->
+      <div class="panel" id="panel-3">
+        <div class="review-layout">
+
+          <!-- Left: Content -->
+          <div class="review-content">
+            <div class="card">
+              <div class="card-body">
+                <h2 class="section-title">Review Article</h2>
+
+                <div class="field">
+                  <label>Title (English)</label>
+                  <div class="editable-field" id="edit-title" contenteditable="true"></div>
+                </div>
+
+                <div class="field">
+                  <label>Excerpt (English)</label>
+                  <div class="editable-field" id="edit-excerpt" contenteditable="true"></div>
+                  <div class="char-counter" id="excerpt-counter">0 / 300</div>
+                </div>
+
+                <div class="field">
+                  <label>Body (English)</label>
+                  <div class="editable-field body-field" id="edit-body" contenteditable="true"></div>
+                </div>
+
+                <!-- Fixes from QA -->
+                <div id="fixes-wrap" class="hidden mt-12">
+                  <strong style="font-size:12px;">QA Fixes Applied:</strong>
+                  <ul class="fixes-list" id="fixes-list"></ul>
+                </div>
+
+                <!-- German fields (collapsible) -->
+                <div class="collapse-toggle" onclick="toggleCollapse('de-fields')">
+                  <span id="de-chevron">▶</span> German (DE) Translation
+                </div>
+                <div class="collapse-body" id="de-fields">
+                  <div class="field">
+                    <label>Title (Deutsch)</label>
+                    <div class="editable-field" id="edit-title-de" contenteditable="true"></div>
+                  </div>
+                  <div class="field">
+                    <label>Excerpt (Deutsch)</label>
+                    <div class="editable-field" id="edit-excerpt-de" contenteditable="true"></div>
+                    <div class="char-counter" id="excerpt-de-counter">0 / 300</div>
+                  </div>
+                  <div class="field">
+                    <label>Body (Deutsch)</label>
+                    <div class="editable-field body-field" id="edit-body-de" contenteditable="true"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Metadata -->
+          <div class="review-meta">
+            <div class="card">
+              <div class="card-body">
+                <h3 class="section-title" style="font-size:15px;">Metadata</h3>
+
+                <div class="meta-row" id="cover-meta-wrap" style="display:none;">
+                  <label>Cover Image</label>
+                  <div class="cover-preview-wrap">
+                    <img id="meta-cover-img" src="" alt="">
+                  </div>
+                  <div class="remove-cover" onclick="removeCover()">Remove cover</div>
+                </div>
+
+                <div class="meta-row">
+                  <label>Post Type</label>
+                  <select id="meta-post-type">
+                    <option value="article">Article / Guide</option>
+                    <option value="case_study">Case Study</option>
+                    <option value="video">Video Post</option>
+                  </select>
+                </div>
+
+                <div class="meta-row">
+                  <label>Category</label>
+                  <select id="meta-category">
+                    <option value="">— No category —</option>
+                  </select>
+                </div>
+
+                <div class="meta-row">
+                  <label>URL Slug</label>
+                  <input type="text" id="meta-slug" placeholder="url-slug">
+                </div>
+
+                <div class="meta-row">
+                  <label>Meta Title</label>
+                  <input type="text" id="meta-title" maxlength="60" oninput="updateCounter('meta-title','meta-title-counter',60)">
+                  <div class="char-counter" id="meta-title-counter">0 / 60</div>
+                </div>
+
+                <div class="meta-row">
+                  <label>Meta Description</label>
+                  <textarea id="meta-desc" rows="3" maxlength="160" oninput="updateCounter('meta-desc','meta-desc-counter',160)"></textarea>
+                  <div class="char-counter" id="meta-desc-counter">0 / 160</div>
+                </div>
+
+                <div class="mt-16">
+                  <button class="btn-primary" style="width:100%;" id="btn-save" onclick="saveDraft()">
+                    Save as Draft →
+                  </button>
+                </div>
+
+                <div id="save-result" class="save-result hidden">
+                  <strong>Draft saved!</strong><br>
+                  <a id="save-admin-link" href="#" target="_blank">Open in Django Admin →</a>
+                </div>
+
+                <div class="mt-12">
+                  <button class="btn-secondary" style="width:100%;" onclick="startOver()">
+                    ← Start Over
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REFERENCE MODE ─────────────────────────────────────────────────── -->
+    <div class="mode-section" id="mode-reference">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="section-title">Existing Blog Posts</h2>
+          <div class="field ref-filter">
+            <input type="text" id="ref-filter" placeholder="Filter by title..." oninput="filterRef(this.value)">
+          </div>
+          <table class="ref-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ref-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
