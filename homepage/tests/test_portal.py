@@ -7,10 +7,13 @@ Roles:
   - no group         → customer views
 """
 
+import datetime
+
 from django.test import TestCase, Client, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User, Group
 from django.core import mail
+from django.core.management import call_command
 from django.urls import reverse
 
 from homepage.models import QuoteRequest, OrderStatusUpdate, Quote, QuoteSignature, DesignFile
@@ -1105,3 +1108,102 @@ class StaffDashboardKpiTests(PortalTestCase):
 
         response = self.client.get(STAFF_DASHBOARD_URL)
         self.assertEqual(response.context['kpi_delivered'], 1)
+
+
+class ExpireQuotesCommandTests(TestCase):
+    """Tests for the expire_quotes management command."""
+
+    def setUp(self):
+        self.staff = make_user('exstaff', group_name='g2g_staff')
+        self.today = datetime.date.today()
+
+    def _make_sent_quote(self, valid_until):
+        qr = make_quote()
+        q = Quote.objects.create(
+            quote_request=qr,
+            created_by=self.staff,
+            status='sent',
+            valid_until=valid_until,
+        )
+        return q
+
+    # ------------------------------------------------------------------
+    # 1. Past-due sent quotes are expired
+    # ------------------------------------------------------------------
+
+    def test_past_due_sent_quotes_are_marked_expired(self):
+        """
+        GIVEN a sent quote whose valid_until is yesterday
+        WHEN expire_quotes runs
+        SHOULD set its status to 'expired'.
+        """
+        q = self._make_sent_quote(self.today - datetime.timedelta(days=1))
+        call_command('expire_quotes', verbosity=0)
+        q.refresh_from_db()
+        self.assertEqual(q.status, 'expired')
+
+    # ------------------------------------------------------------------
+    # 2. Quotes valid today are NOT expired
+    # ------------------------------------------------------------------
+
+    def test_quote_valid_today_is_not_expired(self):
+        """
+        GIVEN a sent quote whose valid_until is today
+        WHEN expire_quotes runs
+        SHOULD leave its status as 'sent'.
+        """
+        q = self._make_sent_quote(self.today)
+        call_command('expire_quotes', verbosity=0)
+        q.refresh_from_db()
+        self.assertEqual(q.status, 'sent')
+
+    # ------------------------------------------------------------------
+    # 3. Future quotes are NOT expired
+    # ------------------------------------------------------------------
+
+    def test_future_quote_is_not_expired(self):
+        """
+        GIVEN a sent quote whose valid_until is in the future
+        WHEN expire_quotes runs
+        SHOULD leave its status as 'sent'.
+        """
+        q = self._make_sent_quote(self.today + datetime.timedelta(days=30))
+        call_command('expire_quotes', verbosity=0)
+        q.refresh_from_db()
+        self.assertEqual(q.status, 'sent')
+
+    # ------------------------------------------------------------------
+    # 4. Accepted quotes are NOT touched
+    # ------------------------------------------------------------------
+
+    def test_accepted_past_due_quote_is_not_expired(self):
+        """
+        GIVEN an accepted quote whose valid_until is in the past
+        WHEN expire_quotes runs
+        SHOULD leave its status as 'accepted' (only 'sent' quotes are expired).
+        """
+        qr = make_quote()
+        q = Quote.objects.create(
+            quote_request=qr,
+            created_by=self.staff,
+            status='accepted',
+            valid_until=self.today - datetime.timedelta(days=10),
+        )
+        call_command('expire_quotes', verbosity=0)
+        q.refresh_from_db()
+        self.assertEqual(q.status, 'accepted')
+
+    # ------------------------------------------------------------------
+    # 5. Dry-run does not save changes
+    # ------------------------------------------------------------------
+
+    def test_dry_run_does_not_save_changes(self):
+        """
+        GIVEN a past-due sent quote
+        WHEN expire_quotes --dry-run runs
+        SHOULD NOT update the quote status.
+        """
+        q = self._make_sent_quote(self.today - datetime.timedelta(days=5))
+        call_command('expire_quotes', dry_run=True, verbosity=0)
+        q.refresh_from_db()
+        self.assertEqual(q.status, 'sent')
