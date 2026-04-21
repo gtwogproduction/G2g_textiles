@@ -18,6 +18,7 @@ urlpatterns = [
     path('portal/customer/', views.customer_dashboard, name='customer_dashboard'),
     path('portal/customer/<int:pk>/', views.customer_order, name='customer_order'),
     path('portal/customer/<int:pk>/notifications/', views.customer_order_notifications, name='customer_order_notifications'),
+    path('portal/customer/<int:pk>/upload-design-file/', views.customer_upload_design_file, name='customer_upload_design_file'),
     path('portal/staff/', views.staff_dashboard, name='staff_dashboard'),
     path('portal/staff/<int:pk>/', views.staff_order, name='staff_order'),
     path('portal/factory/', views.factory_dashboard, name='factory_dashboard'),

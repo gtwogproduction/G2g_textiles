@@ -157,6 +157,23 @@
       </form>
     </div>
 
+    <!-- Link customer account -->
+    <div class="portal-card">
+      <h2>{% trans "Link Customer Account" %}</h2>
+      <form method="post" class="portal-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="link_customer">
+        <div class="form-group">
+          <label>{% trans "Customer Account" %}</label>
+          {{ link_customer_form.customer }}
+        </div>
+        <button type="submit" class="btn btn--primary btn--sm">{% trans "Link Account" %}</button>
+      </form>
+      {% if quote_request.customer %}
+        <p class="form-hint">{% trans "Currently linked:" %} {{ quote_request.customer.username }}</p>
+      {% endif %}
+    </div>
+
     <!-- Payment confirmation -->
     <div class="portal-card">
       <h2>{% trans "Payment" %}</h2>

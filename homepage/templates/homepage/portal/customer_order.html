@@ -88,4 +88,29 @@
     <p class="timeline-empty">{% trans "No updates yet. We will notify you by email once production begins." %}</p>
   {% endif %}
 </div>
+
+<div class="portal-card">
+  <h2>{% trans "Design Files" %}</h2>
+
+  {% if quote.design_files.all %}
+    <ul class="design-files-list">
+      {% for df in quote.design_files.all %}
+        <li>
+          <a href="{{ df.file.url }}" target="_blank" rel="noopener">{{ df.original_name }}</a>
+          <span class="form-hint">{{ df.uploaded_at|date:"d M Y" }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <form method="post" action="{% url 'customer_upload_design_file' quote.pk %}" enctype="multipart/form-data" class="portal-form">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>{% trans "Upload a design file" %}</label>
+      <input type="file" name="design_file" accept=".ai,.eps,.svg,.pdf,.png,.jpg,.jpeg,.webp,.zip">
+      <p class="form-hint">{% trans "Accepted: AI, EPS, SVG, PDF, PNG, JPG, ZIP" %}</p>
+    </div>
+    <button type="submit" class="btn btn--primary btn--sm">{% trans "Upload File" %}</button>
+  </form>
+</div>
 {% endblock %}

@@ -368,6 +368,25 @@ class QuoteSignature(models.Model):
         return f"{self.signer_name} ({self.get_signer_role_display()}) — {self.quote.quote_number}"
 
 
+class DesignFile(models.Model):
+    quote_request = models.ForeignKey(
+        QuoteRequest, on_delete=models.CASCADE, related_name='design_files'
+    )
+    file = models.FileField(upload_to='design_files/')
+    original_name = models.CharField(max_length=255)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"{self.original_name} — {self.quote_request}"
+
+
 class SiteSettings(models.Model):
     hero_video = models.FileField(
     upload_to='hero/',

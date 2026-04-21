@@ -8,11 +8,12 @@ Roles:
 """
 
 from django.test import TestCase, Client, override_settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User, Group
 from django.core import mail
 from django.urls import reverse
 
-from homepage.models import QuoteRequest, OrderStatusUpdate, Quote, QuoteSignature
+from homepage.models import QuoteRequest, OrderStatusUpdate, Quote, QuoteSignature, DesignFile
 
 
 # ---------------------------------------------------------------------------
@@ -881,3 +882,110 @@ class StaffDashboardFilterTests(PortalTestCase):
         )
         response = self.client.get(STAFF_DASHBOARD_URL)
         self.assertContains(response, 'data-status="shipped"')
+
+
+@override_settings(
+    DEFAULT_FILE_STORAGE='django.core.files.storage.FileSystemStorage',
+    MEDIA_ROOT='/tmp/g2g_test_media/',
+    STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage',
+)
+class CustomerDesignFileTests(TestCase):
+    """Tests for the customer_upload_design_file view."""
+
+    def setUp(self):
+        self.customer = make_user('dfcustomer')
+        self.other_customer = make_user('dfother')
+        self.staff = make_user('dfstaff', group_name='g2g_staff')
+        self.quote = make_quote(customer=self.customer)
+        self.upload_url = reverse('customer_upload_design_file', kwargs={'pk': self.quote.pk})
+
+    # ------------------------------------------------------------------
+    # 1. Happy path — valid file creates DesignFile and redirects
+    # ------------------------------------------------------------------
+
+    def test_valid_file_upload_creates_design_file_and_redirects(self):
+        """
+        GIVEN customer POSTs a valid file to upload-design-file
+        SHOULD create a DesignFile record and redirect to customer_order.
+        """
+        self.client.force_login(self.customer)
+        f = SimpleUploadedFile('design.svg', b'<svg/>', content_type='image/svg+xml')
+        response = self.client.post(self.upload_url, {'design_file': f})
+        self.assertEqual(DesignFile.objects.filter(quote_request=self.quote).count(), 1)
+        df = DesignFile.objects.get(quote_request=self.quote)
+        self.assertEqual(df.original_name, 'design.svg')
+        self.assertEqual(df.uploaded_by, self.customer)
+        self.assertRedirects(
+            response,
+            reverse('customer_order', kwargs={'pk': self.quote.pk}),
+            fetch_redirect_response=False,
+        )
+
+    # ------------------------------------------------------------------
+    # 2. Missing file — no DesignFile created, redirects back
+    # ------------------------------------------------------------------
+
+    def test_missing_file_does_not_create_design_file(self):
+        """
+        GIVEN customer POSTs with no file
+        SHOULD NOT create DesignFile (redirect back without record).
+        """
+        self.client.force_login(self.customer)
+        response = self.client.post(self.upload_url, {})
+        self.assertEqual(DesignFile.objects.filter(quote_request=self.quote).count(), 0)
+        self.assertRedirects(
+            response,
+            reverse('customer_order', kwargs={'pk': self.quote.pk}),
+            fetch_redirect_response=False,
+        )
+
+    # ------------------------------------------------------------------
+    # 3. Cross-customer access — returns 404
+    # ------------------------------------------------------------------
+
+    def test_other_customer_upload_to_different_order_returns_404(self):
+        """
+        GIVEN another customer tries to POST to a different customer's order upload URL
+        SHOULD return 404.
+        """
+        self.client.force_login(self.other_customer)
+        f = SimpleUploadedFile('steal.svg', b'<svg/>', content_type='image/svg+xml')
+        response = self.client.post(self.upload_url, {'design_file': f})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(DesignFile.objects.filter(quote_request=self.quote).count(), 0)
+
+    # ------------------------------------------------------------------
+    # 4. Staff user — redirected (not 200, not 404)
+    # ------------------------------------------------------------------
+
+    def test_staff_post_to_customer_upload_url_is_redirected(self):
+        """
+        GIVEN staff user POSTs to the customer upload URL
+        SHOULD redirect — staff are not customers.
+        """
+        self.client.force_login(self.staff)
+        f = SimpleUploadedFile('staff.svg', b'<svg/>', content_type='image/svg+xml')
+        response = self.client.post(self.upload_url, {'design_file': f})
+        self.assertIn(response.status_code, [301, 302])
+        self.assertNotEqual(response.status_code, 200)
+        self.assertNotEqual(response.status_code, 404)
+
+    # ------------------------------------------------------------------
+    # 5. Existing design files appear in customer_order HTML
+    # ------------------------------------------------------------------
+
+    def test_existing_design_files_render_in_customer_order(self):
+        """
+        GIVEN customer GETs customer_order with existing design files
+        SHOULD render the filename in the HTML.
+        """
+        DesignFile.objects.create(
+            quote_request=self.quote,
+            file='design_files/design.svg',
+            original_name='design.svg',
+            uploaded_by=self.customer,
+        )
+        self.client.force_login(self.customer)
+        response = self.client.get(reverse('customer_order', kwargs={'pk': self.quote.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'design.svg')

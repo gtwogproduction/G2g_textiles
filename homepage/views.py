@@ -15,7 +15,7 @@ from .forms import (
     StatusUpdateForm, FactoryAssignForm, LinkCustomerForm,
     QuoteHeaderForm, QuoteLineItemFormSet,
 )
-from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate, Quote, QuoteLineItem, QuoteSignature
+from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate, Quote, QuoteLineItem, QuoteSignature, DesignFile
 
 QUOTE_STEPS = [
     ('about',   _l('About You'),            QuoteStep1Form),
@@ -959,6 +959,30 @@ def customer_order_notifications(request, pk):
         messages.success(request, _('Email notifications turned on.'))
     else:
         messages.success(request, _('Email notifications turned off.'))
+    return redirect('customer_order', pk=pk)
+
+
+@login_required
+def customer_upload_design_file(request, pk):
+    if not _is_customer(request.user):
+        return redirect('portal_home')
+    if request.method != 'POST':
+        return redirect('customer_order', pk=pk)
+    try:
+        qr = QuoteRequest.objects.get(pk=pk, customer=request.user)
+    except QuoteRequest.DoesNotExist:
+        raise Http404
+    f = request.FILES.get('design_file')
+    if not f:
+        messages.error(request, _('Please select a file to upload.'))
+        return redirect('customer_order', pk=pk)
+    DesignFile.objects.create(
+        quote_request=qr,
+        file=f,
+        original_name=f.name,
+        uploaded_by=request.user,
+    )
+    messages.success(request, _('Design file uploaded successfully.'))
     return redirect('customer_order', pk=pk)
 
 
