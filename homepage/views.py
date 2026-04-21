@@ -334,7 +334,8 @@ def blog_list(request):
     from .models import BlogPost, BlogCategory
     category_slug = request.GET.get('category', '')
     categories = BlogCategory.objects.all()
-    posts = BlogPost.objects.filter(is_published=True)
+    now = timezone.now()
+    posts = BlogPost.objects.filter(is_published=True, published_at__lte=now)
     if category_slug:
         posts = posts.filter(category__slug=category_slug)
     return render(request, 'homepage/blog_list.html', {
@@ -346,8 +347,9 @@ def blog_list(request):
 
 def blog_detail(request, slug):
     from .models import BlogPost
+    now = timezone.now()
     try:
-        post = BlogPost.objects.get(slug=slug, is_published=True)
+        post = BlogPost.objects.get(slug=slug, is_published=True, published_at__lte=now)
     except BlogPost.DoesNotExist:
         raise Http404
     is_de = getattr(request, 'LANGUAGE_CODE', 'en').startswith('de')

@@ -1207,3 +1207,93 @@ class ExpireQuotesCommandTests(TestCase):
         call_command('expire_quotes', dry_run=True, verbosity=0)
         q.refresh_from_db()
         self.assertEqual(q.status, 'sent')
+
+
+class ScheduledBlogPublishingTests(TestCase):
+    """Tests for published_at-aware filtering in blog_list and blog_detail."""
+
+    def _make_post(self, slug, is_published, published_at):
+        from homepage.models import BlogPost
+        return BlogPost.objects.create(
+            title=f'Post {slug}',
+            slug=slug,
+            body='body',
+            is_published=is_published,
+            published_at=published_at,
+        )
+
+    # ------------------------------------------------------------------
+    # 1. Past published_at appears in blog_list
+    # ------------------------------------------------------------------
+
+    def test_past_published_post_appears_in_list(self):
+        """
+        GIVEN a post with is_published=True and published_at in the past
+        WHEN blog_list is requested
+        SHOULD include the post.
+        """
+        from django.utils import timezone
+        self._make_post('past-post', True, timezone.now() - datetime.timedelta(hours=1))
+        response = self.client.get('/en/blog/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'past-post')
+
+    # ------------------------------------------------------------------
+    # 2. Future published_at is hidden in blog_list
+    # ------------------------------------------------------------------
+
+    def test_future_published_post_hidden_in_list(self):
+        """
+        GIVEN a post with is_published=True but published_at in the future
+        WHEN blog_list is requested
+        SHOULD NOT include the post.
+        """
+        from django.utils import timezone
+        self._make_post('future-post', True, timezone.now() + datetime.timedelta(days=7))
+        response = self.client.get('/en/blog/')
+        self.assertNotContains(response, 'future-post')
+
+    # ------------------------------------------------------------------
+    # 3. Future published_at returns 404 on blog_detail
+    # ------------------------------------------------------------------
+
+    def test_future_published_post_detail_returns_404(self):
+        """
+        GIVEN a post with is_published=True but published_at in the future
+        WHEN blog_detail is requested directly
+        SHOULD return 404.
+        """
+        from django.utils import timezone
+        self._make_post('future-detail', True, timezone.now() + datetime.timedelta(days=7))
+        response = self.client.get('/en/blog/future-detail/')
+        self.assertEqual(response.status_code, 404)
+
+    # ------------------------------------------------------------------
+    # 4. Past published_at returns 200 on blog_detail
+    # ------------------------------------------------------------------
+
+    def test_past_published_post_detail_returns_200(self):
+        """
+        GIVEN a post with is_published=True and published_at in the past
+        WHEN blog_detail is requested
+        SHOULD return 200.
+        """
+        from django.utils import timezone
+        self._make_post('live-detail', True, timezone.now() - datetime.timedelta(hours=1))
+        response = self.client.get('/en/blog/live-detail/')
+        self.assertEqual(response.status_code, 200)
+
+    # ------------------------------------------------------------------
+    # 5. is_published=False post is still hidden regardless of published_at
+    # ------------------------------------------------------------------
+
+    def test_unpublished_post_is_hidden_even_with_past_date(self):
+        """
+        GIVEN a post with is_published=False but published_at in the past
+        WHEN blog_list is requested
+        SHOULD NOT include the post.
+        """
+        from django.utils import timezone
+        self._make_post('draft-post', False, timezone.now() - datetime.timedelta(hours=1))
+        response = self.client.get('/en/blog/')
+        self.assertNotContains(response, 'draft-post')
