@@ -221,6 +221,51 @@ a:hover { text-decoration: underline; }
   margin-left: auto;
 }
 
+/* ── Quick-template buttons ── */
+.quick-templates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.quick-templates__label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-right: 0.15rem;
+}
+
+.quick-tpl-btn {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--navy);
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.quick-tpl-btn:hover {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.quick-tpl-btn--issue {
+  color: var(--danger, #c0392b);
+  border-color: rgba(192,57,43,0.3);
+}
+
+.quick-tpl-btn--issue:hover {
+  background: var(--danger, #c0392b);
+  color: #fff;
+  border-color: var(--danger, #c0392b);
+}
+
 /* ── Status badge ── */
 .status-badge {
   display: inline-block;

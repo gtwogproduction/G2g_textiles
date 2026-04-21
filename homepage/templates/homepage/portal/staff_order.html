@@ -118,6 +118,19 @@
 
         <div>
           <label>{% trans "Note" %} <small style="color:var(--muted);font-weight:300">({% trans "optional" %})</small></label>
+          <div class="quick-templates" id="quick-templates">
+            <span class="quick-templates__label">{% trans "Quick fill:" %}</span>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "We have received your quote request and are currently reviewing it. We will be in touch within 1–2 business days." %}">{% trans "Received" %}</button>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "We are reviewing your request and may reach out for additional details shortly." %}">{% trans "In Review" %}</button>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "Your quote has been prepared and sent to your email. Please review and let us know if you have any questions." %}">{% trans "Quote Sent" %}</button>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "Fabric samples have been dispatched to your address. Please confirm receipt when they arrive." %}">{% trans "Samples Sent" %}</button>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "Your sample has been approved. We are scheduling your production run now." %}">{% trans "Sample Approved" %}</button>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "Your order is now in production. Estimated completion in approximately 3 weeks." %}">{% trans "In Production" %}</button>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "Your order has passed quality inspection and is ready for dispatch." %}">{% trans "QC Passed" %}</button>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "Your order has been shipped. Tracking details are included above." %}">{% trans "Shipped" %}</button>
+            <button type="button" class="quick-tpl-btn" data-tpl="{% trans "Your order has been delivered. Thank you for working with G2G Textiles — we hope to work with you again soon." %}">{% trans "Delivered" %}</button>
+            <button type="button" class="quick-tpl-btn quick-tpl-btn--issue" data-tpl="{% trans "We have encountered an unexpected delay. Our team is working to resolve this as quickly as possible and will keep you updated." %}">{% trans "Delay" %}</button>
+          </div>
           {{ update_form.note }}
         </div>
         <div>
@@ -234,6 +247,13 @@
   radios.forEach(function(r){ r.addEventListener('change', function(){ sync(this.value); }); });
   var checked = document.querySelector('#staff-update-form input[name="update_type"]:checked');
   if (checked) sync(checked.value);
+
+  document.querySelectorAll('.quick-tpl-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var textarea = document.getElementById('id_note');
+      if (textarea) textarea.value = this.getAttribute('data-tpl');
+    });
+  });
 })();
 </script>
 {% endblock %}
