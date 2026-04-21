@@ -2,6 +2,7 @@
 4-phase AI pipeline: SEO Strategist → Content Writer → QA Editor → German Translator.
 Each phase streams tokens via an async emit() callback.
 """
+from __future__ import annotations
 import json
 import re
 import asyncio

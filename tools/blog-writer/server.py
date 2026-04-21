@@ -2,6 +2,7 @@
 G2G Blog Writer — FastAPI server.
 Run from the project venv: uvicorn server:app --port 3001 --reload
 """
+from __future__ import annotations
 import asyncio
 import json
 import os
@@ -28,6 +29,8 @@ import cloudinary_client as cc
 cc.configure()
 
 # ── FastAPI imports ───────────────────────────────────────────────────────────
+from typing import Optional
+from asgiref.sync import sync_to_async
 from fastapi import FastAPI, Form, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -53,12 +56,12 @@ async def index():
 # ── Data endpoints ────────────────────────────────────────────────────────────
 @app.get("/api/categories")
 async def api_categories():
-    return dc.get_categories()
+    return await sync_to_async(dc.get_categories)()
 
 
 @app.get("/api/posts")
 async def api_posts():
-    return dc.get_recent_posts()
+    return await sync_to_async(dc.get_recent_posts)()
 
 
 @app.post("/api/scrape-url")
@@ -86,7 +89,7 @@ async def api_generate(
     urls: str = Form("[]"),
 ):
     url_list = json.loads(urls)
-    recent_posts = dc.get_recent_posts(limit=30)
+    recent_posts = await sync_to_async(dc.get_recent_posts)(limit=30)
 
     queue: asyncio.Queue = asyncio.Queue()
 
@@ -123,7 +126,7 @@ class PublishPayload(BaseModel):
     title_de: str = ""
     slug: str = ""
     post_type: str = "article"
-    category_id: int | None = None
+    category_id: Optional[int] = None
     excerpt: str = ""
     excerpt_de: str = ""
     body: str = ""
@@ -139,11 +142,11 @@ async def api_publish(payload: PublishPayload):
     slug = payload.slug or payload.title.lower().replace(" ", "-")[:80]
     base_slug = slug
     counter = 1
-    while dc.slug_exists(slug):
+    while await sync_to_async(dc.slug_exists)(slug):
         slug = f"{base_slug}-{counter}"
         counter += 1
 
-    result = dc.create_draft_post({
+    result = await sync_to_async(dc.create_draft_post)({
         "title": payload.title,
         "title_de": payload.title_de,
         "slug": slug,
