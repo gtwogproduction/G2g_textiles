@@ -860,6 +860,35 @@ def _send_quote_notification(quote, email_body=''):
         print(f"Failed to send quote notification: {e}")
 
 
+def _send_quote_accepted_notification(quote):
+    from django.core.mail import send_mail
+    from django.conf import settings as django_settings
+
+    qr = quote.quote_request
+    customer_name = (
+        qr.customer.get_full_name() or qr.customer.username
+        if qr.customer else qr.contact_name or 'Unknown'
+    )
+    admin_url = f"/en/admin/homepage/quote/{quote.pk}/change/"
+    subject = f"Quote {quote.quote_number} accepted — {qr.company_name}"
+    plain = (
+        f"Quote {quote.quote_number} has been accepted by the customer.\n\n"
+        f"Company:  {qr.company_name}\n"
+        f"Customer: {customer_name}\n\n"
+        f"View in admin: https://gtwog.ch{admin_url}"
+    )
+    try:
+        send_mail(
+            subject=subject,
+            message=plain,
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[django_settings.QUOTE_NOTIFICATION_EMAIL],
+            fail_silently=False,
+        )
+    except Exception as e:
+        print(f"Failed to send quote accepted notification: {e}")
+
+
 # ---------------------------------------------------------------------------
 # Portal views
 # ---------------------------------------------------------------------------
@@ -1283,6 +1312,9 @@ def quote_sign(request, quote_pk):
     )
 
     if role == QuoteSignature.ROLE_CUSTOMER:
+        quote.status = 'accepted'
+        quote.save(update_fields=['status', 'updated_at'])
+        _send_quote_accepted_notification(quote)
         return redirect('customer_quote_view', pk=quote.quote_request_id)
     return redirect('staff_quote_edit', quote_pk=quote.pk)
 

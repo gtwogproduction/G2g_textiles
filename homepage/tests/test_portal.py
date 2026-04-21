@@ -9,9 +9,10 @@ Roles:
 
 from django.test import TestCase, Client, override_settings
 from django.contrib.auth.models import User, Group
+from django.core import mail
 from django.urls import reverse
 
-from homepage.models import QuoteRequest, OrderStatusUpdate, Quote
+from homepage.models import QuoteRequest, OrderStatusUpdate, Quote, QuoteSignature
 
 
 # ---------------------------------------------------------------------------
@@ -469,4 +470,120 @@ class QuoteBuilderTests(PortalTestCase):
         quote.save(update_fields=['status', 'updated_at'])
         self.client.force_login(self.other_customer)
         response = self.client.get(customer_quote_url(self.quote_request.pk))
+        self.assertEqual(response.status_code, 404)
+
+
+# ---------------------------------------------------------------------------
+# Signature data shared across signing tests
+# ---------------------------------------------------------------------------
+
+SIGNATURE_PAYLOAD = {'signature_image': 'data:image/png;base64,abc123'}
+
+
+def quote_sign_url(quote_pk):
+    return f'/en/portal/quote/{quote_pk}/sign/'
+
+
+@override_settings(
+    STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage',
+    QUOTE_NOTIFICATION_EMAIL='staff@g2gtextiles.test',
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+)
+class QuoteSigningTests(PortalTestCase):
+    """Tests for the quote_sign view — customer and staff signing behaviour."""
+
+    def setUp(self):
+        self.staff = make_user('signstaff', group_name='g2g_staff')
+        self.customer = make_user('signcustomer')
+        self.quote_request = make_quote(customer=self.customer)
+        # Build a Quote directly (bypass the full staff create flow)
+        self.quote = Quote.objects.create(
+            quote_request=self.quote_request,
+            status='sent',
+            currency='CHF',
+            created_by=self.staff,
+        )
+
+    # ------------------------------------------------------------------
+    # 1. Customer signing — happy path
+    # ------------------------------------------------------------------
+
+    def test_customer_sign_sets_status_to_accepted(self):
+        """
+        GIVEN a sent quote
+        WHEN the customer POSTs a valid signature
+        SHOULD set quote.status to 'accepted'.
+        """
+        self.client.force_login(self.customer)
+        self.client.post(quote_sign_url(self.quote.pk), SIGNATURE_PAYLOAD)
+        self.quote.refresh_from_db()
+        self.assertEqual(self.quote.status, 'accepted')
+
+    # ------------------------------------------------------------------
+    # 2. Email notification after customer signing
+    # ------------------------------------------------------------------
+
+    def test_customer_sign_sends_notification_email(self):
+        """
+        GIVEN a sent quote
+        WHEN the customer signs
+        SHOULD send an email to settings.QUOTE_NOTIFICATION_EMAIL.
+        """
+        self.client.force_login(self.customer)
+        self.client.post(quote_sign_url(self.quote.pk), SIGNATURE_PAYLOAD)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('staff@g2gtextiles.test', mail.outbox[0].to)
+
+    # ------------------------------------------------------------------
+    # 3. Staff signing — status must NOT change
+    # ------------------------------------------------------------------
+
+    def test_staff_sign_does_not_change_status(self):
+        """
+        GIVEN a sent quote
+        WHEN staff POSTs a valid signature
+        SHOULD NOT change quote.status (remains 'sent').
+        """
+        self.client.force_login(self.staff)
+        self.client.post(quote_sign_url(self.quote.pk), SIGNATURE_PAYLOAD)
+        self.quote.refresh_from_db()
+        self.assertEqual(self.quote.status, 'sent')
+
+    # ------------------------------------------------------------------
+    # 4. Duplicate signing — idempotency guard
+    # ------------------------------------------------------------------
+
+    def test_customer_sign_twice_returns_409(self):
+        """
+        GIVEN a quote already accepted (customer already signed)
+        WHEN the customer attempts to sign again
+        SHOULD return 409.
+        """
+        self.quote.status = 'accepted'
+        self.quote.save(update_fields=['status'])
+        QuoteSignature.objects.create(
+            quote=self.quote,
+            signer=self.customer,
+            signer_name='Test Customer',
+            signer_role=QuoteSignature.ROLE_CUSTOMER,
+            signature_image='data:image/png;base64,abc123',
+        )
+        self.client.force_login(self.customer)
+        response = self.client.post(quote_sign_url(self.quote.pk), SIGNATURE_PAYLOAD)
+        self.assertEqual(response.status_code, 409)
+
+    # ------------------------------------------------------------------
+    # 5. Draft quote — must not be signable
+    # ------------------------------------------------------------------
+
+    def test_customer_sign_draft_quote_returns_404(self):
+        """
+        GIVEN a draft quote (not yet sent to the customer)
+        WHEN the customer tries to sign it
+        SHOULD return 404.
+        """
+        self.quote.status = 'draft'
+        self.quote.save(update_fields=['status'])
+        self.client.force_login(self.customer)
+        response = self.client.post(quote_sign_url(self.quote.pk), SIGNATURE_PAYLOAD)
         self.assertEqual(response.status_code, 404)
