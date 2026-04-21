@@ -172,6 +172,22 @@ class FactoryAssignForm(forms.Form):
     )
 
 
+class LinkCustomerForm(forms.Form):
+    customer = forms.ModelChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        empty_label="— Remove customer link —",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['customer'].queryset = (
+            User.objects.filter(groups__isnull=True)
+            .exclude(is_superuser=True)
+            .order_by('username')
+        )
+
+
 class QuoteHeaderForm(forms.ModelForm):
     class Meta:
         model = Quote

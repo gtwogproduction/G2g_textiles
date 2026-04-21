@@ -12,7 +12,7 @@ from .forms import (
     ContactForm,
     QuoteStep1Form, QuoteStep2Form, QuoteStep3Form,
     QuoteStep4Form, QuoteStep5Form,
-    StatusUpdateForm, FactoryAssignForm,
+    StatusUpdateForm, FactoryAssignForm, LinkCustomerForm,
     QuoteHeaderForm, QuoteLineItemFormSet,
 )
 from .models import ContactSubmission, QuoteRequest, OrderStatusUpdate, Quote, QuoteLineItem, QuoteSignature
@@ -866,8 +866,8 @@ def _send_quote_accepted_notification(quote):
 
     qr = quote.quote_request
     customer_name = (
-        qr.customer.get_full_name() or qr.customer.username
-        if qr.customer else qr.contact_name or 'Unknown'
+        (qr.customer.get_full_name() or qr.customer.username)
+        if qr.customer else (qr.contact_name or 'Unknown')
     )
     admin_url = f"/en/admin/homepage/quote/{quote.pk}/change/"
     subject = f"Quote {quote.quote_number} accepted — {qr.company_name}"
@@ -986,6 +986,7 @@ def staff_order(request, pk):
 
     update_form = StatusUpdateForm()
     assign_form = FactoryAssignForm(initial={'factory': quote.assigned_factory})
+    link_customer_form = LinkCustomerForm(initial={'customer': quote.customer})
 
     if request.method == 'POST':
         if 'post_update' in request.POST:
@@ -1033,6 +1034,19 @@ def staff_order(request, pk):
             else:
                 messages.success(request, _('Payment confirmation removed.'))
             return redirect('staff_order', pk=pk)
+        elif request.POST.get('action') == 'link_customer':
+            link_customer_form = LinkCustomerForm(request.POST)
+            if link_customer_form.is_valid():
+                quote.customer = link_customer_form.cleaned_data['customer']
+                quote.save(update_fields=['customer'])
+                if quote.customer:
+                    messages.success(request, _('Customer account linked.'))
+                else:
+                    messages.success(request, _('Customer account removed.'))
+                return redirect('staff_order', pk=pk)
+            else:
+                messages.error(request, _('Could not link customer — please try again.'))
+                return redirect('staff_order', pk=pk)
 
     updates = quote.status_updates.all()
     return render(request, 'homepage/portal/staff_order.html', {
@@ -1040,6 +1054,7 @@ def staff_order(request, pk):
         'updates': updates,
         'update_form': update_form,
         'assign_form': assign_form,
+        'link_customer_form': link_customer_form,
         'next_status_key': next_status_key or '',
         'next_status_label': _status_labels.get(next_status_key, '') if next_status_key else '',
         'current_status_key': current_status_key,
@@ -1277,12 +1292,12 @@ def customer_quote_print(request, pk):
     try:
         quote_request = QuoteRequest.objects.get(pk=pk, customer=request.user)
         quote = quote_request.quote
-    except (QuoteRequest.DoesNotExist, Quote.DoesNotExist, AttributeError):
+    except (QuoteRequest.DoesNotExist, AttributeError):
         raise Http404
     if quote.status == 'draft':
         raise Http404
     line_items = quote.line_items.all()
-    signatures = quote.signatures.filter(signer_role='customer')
+    signatures = quote.signatures.filter(signer_role=QuoteSignature.ROLE_CUSTOMER)
     return render(request, 'homepage/portal/customer_quote_print.html', {
         'quote': quote,
         'quote_request': quote_request,
