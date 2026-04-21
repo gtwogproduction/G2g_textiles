@@ -10,8 +10,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Load .env before anything else
+# Load tool .env first, then fall back to main project .env for shared keys (Cloudinary etc.)
 load_dotenv(Path(__file__).parent / ".env")
+load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 # ── Bootstrap Django ORM ──────────────────────────────────────────────────────
 _django_path = os.environ.get("DJANGO_PROJECT_PATH", str(Path(__file__).parent.parent.parent))
