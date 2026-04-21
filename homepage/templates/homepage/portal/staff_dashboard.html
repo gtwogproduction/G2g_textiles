@@ -10,6 +10,30 @@
 </div>
 
 {% if quotes %}
+  <div class="portal-filter-bar">
+    <input
+      id="order-search"
+      type="search"
+      placeholder="{% trans "Search by company, contact or customer…" %}"
+      autocomplete="off"
+    >
+    <select id="status-filter">
+      <option value="">{% trans "All statuses" %}</option>
+      <option value="none">—&nbsp;{% trans "No status yet" %}</option>
+      <option value="quote_received">{% trans "Quote Received" %}</option>
+      <option value="in_review">{% trans "In Review" %}</option>
+      <option value="quote_sent">{% trans "Quote Sent" %}</option>
+      <option value="sampling">{% trans "Sampling" %}</option>
+      <option value="sample_approved">{% trans "Sample Approved" %}</option>
+      <option value="in_production">{% trans "In Production" %}</option>
+      <option value="quality_check">{% trans "Quality Check" %}</option>
+      <option value="shipped">{% trans "Shipped" %}</option>
+      <option value="delivered">{% trans "Delivered" %}</option>
+    </select>
+    <span id="order-count" class="portal-filter-bar__count"
+          data-tpl="{% trans "Showing {visible} of {total} orders" %}"></span>
+  </div>
+
   <div class="portal-card">
     <table class="portal-table">
       <thead>
@@ -26,7 +50,7 @@
       </thead>
       <tbody>
         {% for q in quotes %}
-        <tr>
+        <tr data-status="{{ q.status_updates.first.status|default:'none' }}">
           <td>{{ q.company_name|default:"—" }}</td>
           <td>{{ q.contact_name }}</td>
           <td>{{ q.product_types }}</td>
@@ -36,7 +60,7 @@
           <td>
             {% with latest=q.status_updates.first %}
               {% if latest %}
-                <span class="status-badge status-badge--{{ latest.status }}">{{ latest.get_status_display }}</span>
+                <span class="status-badge status-badge--{{ latest.status }}" data-status="{{ latest.status }}">{{ latest.get_status_display }}</span>
               {% else %}
                 <span style="color:var(--muted);font-size:0.85rem;">—</span>
               {% endif %}
@@ -47,10 +71,71 @@
         {% endfor %}
       </tbody>
     </table>
+    <p id="no-results-msg" style="display:none; padding:1rem; color:var(--muted); text-align:center; font-size:0.9rem;">
+      {% trans "No orders match your search." %}
+    </p>
   </div>
 {% else %}
   <div class="portal-empty">
     <p>{% trans "No orders yet." %}</p>
   </div>
 {% endif %}
+
+<script>
+(function () {
+  var searchInput   = document.getElementById('order-search');
+  var statusSelect  = document.getElementById('status-filter');
+  var countDisplay  = document.getElementById('order-count');
+  var noResultsMsg  = document.getElementById('no-results-msg');
+
+  if (!searchInput || !statusSelect) return;
+
+  var tbody = document.querySelector('.portal-table tbody');
+  var allRows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+  var total   = allRows.length;
+
+  function applyFilters() {
+    var term   = searchInput.value.trim().toLowerCase();
+    var status = statusSelect.value;   // '' = all, 'none' = no status yet, or a stage slug
+    var visible = 0;
+
+    allRows.forEach(function (row) {
+      var cells    = row.querySelectorAll('td');
+      var company  = cells[0] ? cells[0].textContent.toLowerCase() : '';
+      var contact  = cells[1] ? cells[1].textContent.toLowerCase() : '';
+      var customer = cells[4] ? cells[4].textContent.toLowerCase() : '';
+      var rowStatus = row.getAttribute('data-status') || 'none';
+
+      var textMatch = !term ||
+        company.indexOf(term)  !== -1 ||
+        contact.indexOf(term)  !== -1 ||
+        customer.indexOf(term) !== -1;
+
+      var statusMatch = status === '' ||
+        (status === 'none'  && rowStatus === 'none') ||
+        (status !== 'none'  && rowStatus === status);
+
+      if (textMatch && statusMatch) {
+        row.style.display = '';
+        visible++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (countDisplay) {
+      var tpl = countDisplay.getAttribute('data-tpl') || '';
+      countDisplay.textContent = tpl.replace('{visible}', visible).replace('{total}', total);
+    }
+
+    if (noResultsMsg) {
+      noResultsMsg.style.display = visible === 0 ? '' : 'none';
+    }
+  }
+
+  searchInput.addEventListener('input',  applyFilters);
+  statusSelect.addEventListener('change', applyFilters);
+  applyFilters();
+}());
+</script>
 {% endblock %}

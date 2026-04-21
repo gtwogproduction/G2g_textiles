@@ -680,3 +680,204 @@ class CustomerQuotePrintTests(PortalTestCase):
         self.client.force_login(self.customer)
         response = self.client.get(customer_quote_print_url(self.quote_request.pk))
         self.assertEqual(response.status_code, 404)
+
+
+class StaffLinkCustomerTests(PortalTestCase):
+    """Tests for the link_customer action on the staff_order view."""
+
+    def setUp(self):
+        self.staff = make_user('linkcuststaff', group_name='g2g_staff')
+        self.customer = make_user('linkcustcustomer')  # no group — valid customer
+        self.staff_user2 = make_user('linkcuststaff2', group_name='g2g_staff')
+        self.quote = make_quote()
+        self.url = staff_order_url(self.quote.pk)
+
+    # ------------------------------------------------------------------
+    # 1. Link a valid customer account
+    # ------------------------------------------------------------------
+
+    def test_link_valid_customer_sets_quote_customer(self):
+        """
+        GIVEN staff POSTs action=link_customer with a valid customer user
+        SHOULD set quote_request.customer to that user and redirect.
+        """
+        self.client.force_login(self.staff)
+        response = self.client.post(self.url, {
+            'action': 'link_customer',
+            'customer': self.customer.pk,
+        })
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        self.quote.refresh_from_db()
+        self.assertEqual(self.quote.customer, self.customer)
+
+    # ------------------------------------------------------------------
+    # 2. Unlink (clear) the customer account
+    # ------------------------------------------------------------------
+
+    def test_link_empty_value_clears_quote_customer(self):
+        """
+        GIVEN a quote already linked to a customer
+        WHEN staff POSTs action=link_customer with an empty customer value
+        SHOULD set quote_request.customer to None and redirect.
+        """
+        self.quote.customer = self.customer
+        self.quote.save(update_fields=['customer'])
+
+        self.client.force_login(self.staff)
+        response = self.client.post(self.url, {
+            'action': 'link_customer',
+            'customer': '',
+        })
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        self.quote.refresh_from_db()
+        self.assertIsNone(self.quote.customer)
+
+    # ------------------------------------------------------------------
+    # 3. Non-staff cannot POST to staff_order
+    # ------------------------------------------------------------------
+
+    def test_non_staff_post_is_redirected_and_does_not_update(self):
+        """
+        GIVEN a customer user (no group) POSTs to staff_order
+        SHOULD redirect (not 200) and leave quote_request.customer unchanged.
+        """
+        self.client.force_login(self.customer)
+        response = self.client.post(self.url, {
+            'action': 'link_customer',
+            'customer': self.customer.pk,
+        })
+        self.assertIn(response.status_code, [301, 302])
+        self.quote.refresh_from_db()
+        self.assertIsNone(self.quote.customer)
+
+    # ------------------------------------------------------------------
+    # 4. Staff user ID is excluded from the form queryset
+    # ------------------------------------------------------------------
+
+    def test_link_staff_user_does_not_update_quote_customer(self):
+        """
+        GIVEN staff POSTs action=link_customer with a staff user's pk
+        SHOULD NOT link them — form excludes grouped users, so quote.customer stays None.
+        """
+        self.client.force_login(self.staff)
+        # The staff user is in a group so LinkCustomerForm excludes them from the queryset.
+        # The form will be invalid (invalid choice) and the view should NOT save.
+        self.client.post(self.url, {
+            'action': 'link_customer',
+            'customer': self.staff_user2.pk,
+        })
+        self.quote.refresh_from_db()
+        self.assertIsNone(self.quote.customer)
+
+
+class StaffDashboardFilterTests(PortalTestCase):
+    """Tests for the client-side filter bar rendered on the staff dashboard."""
+
+    def setUp(self):
+        self.staff = make_user('filterstaff', group_name='g2g_staff')
+        self.quote = make_quote()
+        self.client.force_login(self.staff)
+
+    # ------------------------------------------------------------------
+    # 1. Search input
+    # ------------------------------------------------------------------
+
+    def test_search_input_is_rendered(self):
+        """
+        GIVEN staff GETs the dashboard with orders
+        SHOULD render the search input with id="order-search".
+        """
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="order-search"')
+
+    # ------------------------------------------------------------------
+    # 2. Status dropdown
+    # ------------------------------------------------------------------
+
+    def test_status_dropdown_is_rendered(self):
+        """
+        GIVEN staff GETs the dashboard with orders
+        SHOULD render the status filter select with id="status-filter".
+        """
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="status-filter"')
+
+    # ------------------------------------------------------------------
+    # 3. Order count span
+    # ------------------------------------------------------------------
+
+    def test_order_count_span_is_rendered(self):
+        """
+        GIVEN staff GETs the dashboard with orders
+        SHOULD render the order count span with id="order-count".
+        """
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="order-count"')
+
+    # ------------------------------------------------------------------
+    # 4. Both company names are present in the HTML
+    # ------------------------------------------------------------------
+
+    def test_both_company_names_appear_in_html(self):
+        """
+        GIVEN staff GETs the dashboard with 2 orders
+        SHOULD render both company names so the JS filter has rows to work with.
+        """
+        QuoteRequest.objects.create(
+            company_name='Alpha Sportswear',
+            industry='sports_club',
+            contact_name='Alice Alpha',
+            role='owner',
+            email='alpha@test.com',
+            product_types='tshirts',
+            quantity_per_style='50-100',
+            gender_sizing='unisex',
+            print_method='screen_print',
+            print_positions='1',
+            design_files_status='yes_vector',
+            desired_delivery='flexible',
+            sample_required='no',
+            budget_range='1k-5k',
+        )
+        QuoteRequest.objects.create(
+            company_name='Beta Uniforms',
+            industry='sports_club',
+            contact_name='Bob Beta',
+            role='owner',
+            email='beta@test.com',
+            product_types='tshirts',
+            quantity_per_style='50-100',
+            gender_sizing='unisex',
+            print_method='screen_print',
+            print_positions='1',
+            design_files_status='yes_vector',
+            desired_delivery='flexible',
+            sample_required='no',
+            budget_range='1k-5k',
+        )
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertContains(response, 'Alpha Sportswear')
+        self.assertContains(response, 'Beta Uniforms')
+
+    # ------------------------------------------------------------------
+    # 5. data-status attribute reflects the latest status update
+    # ------------------------------------------------------------------
+
+    def test_row_data_status_attribute_reflects_status_update(self):
+        """
+        GIVEN an order that has a status update with status='shipped'
+        WHEN staff GETs the dashboard
+        SHOULD render data-status="shipped" on the table row.
+        """
+        OrderStatusUpdate.objects.create(
+            quote_request=self.quote,
+            status='shipped',
+            update_type='update',
+            note='Order has shipped.',
+            created_by=self.staff,
+        )
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertContains(response, 'data-status="shipped"')
