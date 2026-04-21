@@ -1,0 +1,337 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proforma Invoice {{ quote.quote_number }} — G2G Textiles</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      color: #1a1a1a;
+      background: #fff;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .print-wrap {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem;
+    }
+
+    /* Header */
+    .print-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid #1a1a1a;
+    }
+
+    .print-logo {
+      font-size: 1.6rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+
+    .print-logo span { font-weight: 300; }
+
+    .print-quote-id { text-align: right; }
+
+    .print-quote-id h2 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .print-quote-id p {
+      font-size: 0.82rem;
+      color: #6b6760;
+    }
+
+    /* Info blocks */
+    .print-info-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .print-info-block h3 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b6760;
+      margin-bottom: 0.5rem;
+    }
+
+    .print-info-block p {
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    /* Line items table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #6b6760;
+      padding: 0.6rem 0.5rem;
+      border-bottom: 1px solid #ddd;
+    }
+
+    thead th:last-child { text-align: right; }
+
+    tbody td {
+      padding: 0.6rem 0.5rem;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+    }
+
+    tbody td:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    .td-note {
+      font-size: 0.78rem;
+      color: #6b6760;
+      display: block;
+      margin-top: 0.15rem;
+    }
+
+    /* Total */
+    .print-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 0.5rem;
+      border-top: 2px solid #1a1a1a;
+      margin-top: 0.25rem;
+      font-weight: 500;
+      font-size: 1.05rem;
+    }
+
+    .print-total-row strong {
+      font-size: 1.2rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Notes */
+    .print-notes {
+      margin-top: 2rem;
+      padding: 1rem 1.25rem;
+      background: #f5f2ee;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+
+    .print-notes h4 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b6760;
+      margin-bottom: 0.5rem;
+    }
+
+    .print-footer {
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #eee;
+      font-size: 0.78rem;
+      color: #6b6760;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    /* Print button (screen only) */
+    .print-btn-bar {
+      text-align: right;
+      margin-bottom: 1.5rem;
+    }
+
+    .print-btn {
+      display: inline-block;
+      padding: 0.55rem 1.25rem;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 400;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+    }
+
+    .print-btn:hover { background: #333; }
+
+    @media print {
+      .print-btn-bar { display: none !important; }
+      body { font-size: 12px; }
+      .print-wrap { padding: 0; max-width: 100%; }
+    }
+
+    /* Signatures */
+    .print-signatures {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #eee;
+    }
+
+    .print-signatures h4 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b6760;
+      margin-bottom: 1rem;
+    }
+
+    .sig-grid {
+      display: flex;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .sig-block {
+      text-align: center;
+      min-width: 180px;
+    }
+
+    .sig-block img {
+      max-width: 200px;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .sig-block p {
+      font-size: 0.82rem;
+      color: #1a1a1a;
+      line-height: 1.5;
+    }
+
+    .sig-block small { color: #6b6760; font-size: 0.76rem; }
+
+    @page { size: A4; margin: 1.5cm; }
+  </style>
+</head>
+<body>
+
+<div class="print-wrap">
+
+  <div class="print-btn-bar">
+    <button class="print-btn" onclick="window.print()">{% trans "Print / Save as PDF" %}</button>
+  </div>
+
+  <div class="print-header">
+    <div class="print-logo">G2G <span>Textiles</span></div>
+    <div class="print-quote-id">
+      <h2>{% trans "Proforma Invoice" %}</h2>
+      <p>{{ quote.quote_number }} &mdash; {{ quote.get_status_display }}</p>
+      {% if quote.created_at %}<p>{{ quote.created_at|date:"d F Y" }}</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="print-info-row">
+    <div class="print-info-block">
+      <h3>{% trans "Customer" %}</h3>
+      <p>
+        <strong>{{ quote_request.company_name|default:quote_request.contact_name }}</strong><br>
+        {{ quote_request.contact_name }}<br>
+        {{ quote_request.email }}<br>
+        {% if quote_request.phone %}{{ quote_request.phone }}<br>{% endif %}
+      </p>
+    </div>
+    <div class="print-info-block">
+      <h3>{% trans "Quote Details" %}</h3>
+      <p>
+        {% trans "Currency" %}: {{ quote.currency }}<br>
+        {% if quote.valid_until %}{% trans "Valid Until" %}: {{ quote.valid_until|date:"d M Y" }}<br>{% endif %}
+        {% if quote.estimated_delivery %}{% trans "Estimated Delivery" %}: {{ quote.estimated_delivery|date:"d M Y" }}{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:50%">{% trans "Line Items" %}</th>
+        <th>{% trans "Quantity" %}</th>
+        <th>{% trans "Unit Price" %}</th>
+        <th>{% trans "Subtotal" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in line_items %}
+      <tr>
+        <td>
+          {{ item.description }}
+          {% if item.note %}<span class="td-note">{{ item.note }}</span>{% endif %}
+        </td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ quote.currency }} {{ item.unit_price }}</td>
+        <td>{{ quote.currency }} {{ item.subtotal }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" style="color:#6b6760;padding:1rem 0.5rem">—</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="print-total-row">
+    <span>{% trans "Total" %}</span>
+    <strong>{{ quote.currency }} {{ quote.total }}</strong>
+  </div>
+
+  {% if quote.notes_customer %}
+  <div class="print-notes">
+    <h4>{% trans "Notes" %}</h4>
+    <p>{{ quote.notes_customer|linebreaksbr }}</p>
+  </div>
+  {% endif %}
+
+  {% if signatures %}
+  <div class="print-signatures">
+    <h4>{% trans "Signature" %}</h4>
+    <div class="sig-grid">
+      {% for sig in signatures %}
+      <div class="sig-block">
+        <img src="{{ sig.signature_image }}" alt="{% trans 'Signature' %}">
+        <p>{{ sig.signer_name }}<br><small>{{ sig.signed_at|date:"d.m.Y H:i" }}</small></p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="print-footer">
+    <span>G2G Textiles &mdash; production@gtwog.ch &mdash; gtwog.ch</span>
+    <span>{% trans "To accept this quote, reply to" %} production@gtwog.ch</span>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1271,6 +1271,27 @@ def customer_quote_view(request, pk):
 
 
 @login_required
+def customer_quote_print(request, pk):
+    if not _is_customer(request.user):
+        return redirect('portal_home')
+    try:
+        quote_request = QuoteRequest.objects.get(pk=pk, customer=request.user)
+        quote = quote_request.quote
+    except (QuoteRequest.DoesNotExist, Quote.DoesNotExist, AttributeError):
+        raise Http404
+    if quote.status == 'draft':
+        raise Http404
+    line_items = quote.line_items.all()
+    signatures = quote.signatures.filter(signer_role='customer')
+    return render(request, 'homepage/portal/customer_quote_print.html', {
+        'quote': quote,
+        'quote_request': quote_request,
+        'line_items': line_items,
+        'signatures': signatures,
+    })
+
+
+@login_required
 def quote_sign(request, quote_pk):
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)

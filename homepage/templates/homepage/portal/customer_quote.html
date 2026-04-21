@@ -18,7 +18,10 @@
     <div class="portal-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
         <h2 style="margin:0">{{ quote.quote_number }}</h2>
-        <span class="status-badge status-badge--quote-{{ quote.status }}">{{ quote.get_status_display }}</span>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <span class="status-badge status-badge--quote-{{ quote.status }}">{{ quote.get_status_display }}</span>
+          <a href="{% url 'customer_quote_print' pk=quote_request.pk %}" target="_blank" class="portal-btn portal-btn--secondary" style="font-size:0.82rem;padding:0.35rem 0.75rem">{% trans "Print / Save as PDF" %}</a>
+        </div>
       </div>
 
       <div class="table-scroll">

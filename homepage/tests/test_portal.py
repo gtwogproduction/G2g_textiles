@@ -587,3 +587,96 @@ class QuoteSigningTests(PortalTestCase):
         self.client.force_login(self.customer)
         response = self.client.post(quote_sign_url(self.quote.pk), SIGNATURE_PAYLOAD)
         self.assertEqual(response.status_code, 404)
+
+
+def customer_quote_print_url(pk):
+    return reverse('customer_quote_print', kwargs={'pk': pk})
+
+
+class CustomerQuotePrintTests(PortalTestCase):
+    """Tests for the customer_quote_print view."""
+
+    def setUp(self):
+        self.staff = make_user('printstaff', group_name='g2g_staff')
+        self.customer = make_user('printcustomer')
+        self.other_customer = make_user('printother')
+        self.quote_request = make_quote(customer=self.customer)
+
+    def test_customer_with_sent_quote_gets_200(self):
+        """
+        GIVEN a customer with a sent quote
+        WHEN GET customer_quote_print
+        SHOULD return 200.
+        """
+        Quote.objects.create(
+            quote_request=self.quote_request,
+            status='sent',
+            currency='CHF',
+            quote_number='Q-2026-0001',
+            created_by=self.staff,
+        )
+        self.client.force_login(self.customer)
+        response = self.client.get(customer_quote_print_url(self.quote_request.pk))
+        self.assertEqual(response.status_code, 200)
+
+    def test_other_customer_gets_404(self):
+        """
+        GIVEN another customer (different account)
+        WHEN GET customer_quote_print for a different customer's order
+        SHOULD return 404.
+        """
+        Quote.objects.create(
+            quote_request=self.quote_request,
+            status='sent',
+            currency='CHF',
+            quote_number='Q-2026-0002',
+            created_by=self.staff,
+        )
+        self.client.force_login(self.other_customer)
+        response = self.client.get(customer_quote_print_url(self.quote_request.pk))
+        self.assertEqual(response.status_code, 404)
+
+    def test_staff_user_is_redirected(self):
+        """
+        GIVEN a staff user (g2g_staff group)
+        WHEN GET customer_quote_print
+        SHOULD redirect — staff are not customers, not 200.
+        """
+        Quote.objects.create(
+            quote_request=self.quote_request,
+            status='sent',
+            currency='CHF',
+            quote_number='Q-2026-0003',
+            created_by=self.staff,
+        )
+        self.client.force_login(self.staff)
+        response = self.client.get(customer_quote_print_url(self.quote_request.pk))
+        self.assertIn(response.status_code, [301, 302])
+        self.assertNotEqual(response.status_code, 200)
+
+    def test_customer_with_draft_quote_gets_404(self):
+        """
+        GIVEN a customer with a draft quote (not yet sent)
+        WHEN GET customer_quote_print
+        SHOULD return 404.
+        """
+        Quote.objects.create(
+            quote_request=self.quote_request,
+            status='draft',
+            currency='CHF',
+            quote_number='Q-2026-0004',
+            created_by=self.staff,
+        )
+        self.client.force_login(self.customer)
+        response = self.client.get(customer_quote_print_url(self.quote_request.pk))
+        self.assertEqual(response.status_code, 404)
+
+    def test_customer_with_no_quote_gets_404(self):
+        """
+        GIVEN a customer whose order has no Quote attached
+        WHEN GET customer_quote_print
+        SHOULD return 404.
+        """
+        self.client.force_login(self.customer)
+        response = self.client.get(customer_quote_print_url(self.quote_request.pk))
+        self.assertEqual(response.status_code, 404)
