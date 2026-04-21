@@ -9,6 +9,25 @@
   <p>{% trans "Manage quote requests and post production updates." %}</p>
 </div>
 
+<div class="kpi-strip">
+  <div class="kpi-card">
+    <div class="kpi-card__value">{{ kpi_active }}</div>
+    <div class="kpi-card__label">{% trans "Active Orders" %}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-card__value">{{ kpi_no_quote }}</div>
+    <div class="kpi-card__label">{% trans "No Quote Yet" %}</div>
+  </div>
+  <div class="kpi-card{% if kpi_expiring %} kpi-card--warn{% endif %}">
+    <div class="kpi-card__value">{{ kpi_expiring }}</div>
+    <div class="kpi-card__label">{% trans "Quotes Expiring (7 days)" %}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-card__value">{{ kpi_delivered }}</div>
+    <div class="kpi-card__label">{% trans "Delivered This Month" %}</div>
+  </div>
+</div>
+
 {% if quotes %}
   <div class="portal-filter-bar">
     <input

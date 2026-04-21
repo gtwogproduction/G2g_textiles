@@ -176,6 +176,44 @@ a:hover { text-decoration: underline; }
 
 .portal-table a { font-weight: 400; }
 
+/* ── Staff dashboard KPI strip ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+
+.kpi-card--warn {
+  border-color: rgba(192,57,43,0.35);
+  background: rgba(192,57,43,0.04);
+}
+
+.kpi-card__value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.kpi-card--warn .kpi-card__value {
+  color: var(--danger, #c0392b);
+}
+
+.kpi-card__label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
 /* ── Staff dashboard filter bar ── */
 .portal-filter-bar {
   display: flex;
@@ -905,6 +943,7 @@ a:hover { text-decoration: underline; }
   .add-line-btn { font-size: 0.82rem; padding: 0.55rem 0.75rem; }
 
   .quote-meta-list { font-size: 0.82rem; }
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
   .portal-filter-bar { gap: 0.5rem; }
   .portal-filter-bar input[type="search"] { min-width: 0; width: 100%; }
   .portal-filter-bar select { min-width: 0; width: 100%; }

@@ -1,6 +1,8 @@
 from decimal import Decimal
+from datetime import timedelta
 
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
@@ -991,7 +993,38 @@ def staff_dashboard(request):
     if not _is_g2g_staff(request.user):
         return redirect('portal_home')
     quotes = QuoteRequest.objects.all().order_by('-submitted_at')
-    return render(request, 'homepage/portal/staff_dashboard.html', {'quotes': quotes})
+
+    now = timezone.now()
+    in_seven_days = now + timedelta(days=7)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    kpi_active = QuoteRequest.objects.filter(
+        status_updates__update_type='update',
+    ).exclude(
+        status_updates__status='delivered',
+    ).distinct().count()
+
+    kpi_no_quote = QuoteRequest.objects.filter(quote__isnull=True).count()
+
+    kpi_expiring = Quote.objects.filter(
+        status='sent',
+        valid_until__gte=now.date(),
+        valid_until__lte=in_seven_days.date(),
+    ).count()
+
+    kpi_delivered = OrderStatusUpdate.objects.filter(
+        status='delivered',
+        update_type='update',
+        created_at__gte=month_start,
+    ).values('quote_request').distinct().count()
+
+    return render(request, 'homepage/portal/staff_dashboard.html', {
+        'quotes': quotes,
+        'kpi_active': kpi_active,
+        'kpi_no_quote': kpi_no_quote,
+        'kpi_expiring': kpi_expiring,
+        'kpi_delivered': kpi_delivered,
+    })
 
 
 @login_required

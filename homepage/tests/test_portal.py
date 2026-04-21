@@ -989,3 +989,119 @@ class CustomerDesignFileTests(TestCase):
         response = self.client.get(reverse('customer_order', kwargs={'pk': self.quote.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'design.svg')
+
+
+class StaffDashboardKpiTests(PortalTestCase):
+    """Tests for the KPI stat strip on the staff dashboard."""
+
+    def setUp(self):
+        self.staff = make_user('kpistaff', group_name='g2g_staff')
+        self.client.force_login(self.staff)
+
+    # ------------------------------------------------------------------
+    # 1. KPI strip is rendered
+    # ------------------------------------------------------------------
+
+    def test_kpi_strip_is_rendered(self):
+        """
+        GIVEN staff GETs the dashboard
+        SHOULD render an element with class kpi-strip.
+        """
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'kpi-strip')
+
+    # ------------------------------------------------------------------
+    # 2. Active Orders counts orders with updates but not delivered
+    # ------------------------------------------------------------------
+
+    def test_kpi_active_counts_orders_with_non_delivered_updates(self):
+        """
+        GIVEN two orders — one in production, one delivered
+        WHEN staff GETs the dashboard
+        SHOULD show kpi_active = 1 (only the in-production order).
+        """
+        in_prod = make_quote()
+        delivered = make_quote()
+        OrderStatusUpdate.objects.create(
+            quote_request=in_prod, status='in_production',
+            update_type='update', created_by=self.staff,
+        )
+        OrderStatusUpdate.objects.create(
+            quote_request=delivered, status='delivered',
+            update_type='update', created_by=self.staff,
+        )
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.context['kpi_active'], 1)
+
+    # ------------------------------------------------------------------
+    # 3. No Quote Yet counts orders without a Quote object
+    # ------------------------------------------------------------------
+
+    def test_kpi_no_quote_counts_orders_without_quote(self):
+        """
+        GIVEN two orders — one with a Quote, one without
+        WHEN staff GETs the dashboard
+        SHOULD show kpi_no_quote = 1.
+        """
+        with_quote = make_quote()
+        make_quote()  # no quote attached
+        Quote.objects.create(
+            quote_request=with_quote,
+            created_by=self.staff,
+            status='draft',
+        )
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.context['kpi_no_quote'], 1)
+
+    # ------------------------------------------------------------------
+    # 4. Quotes Expiring counts sent quotes with valid_until <= 7 days
+    # ------------------------------------------------------------------
+
+    def test_kpi_expiring_counts_sent_quotes_expiring_soon(self):
+        """
+        GIVEN a sent quote expiring in 3 days and a sent quote expiring in 30 days
+        WHEN staff GETs the dashboard
+        SHOULD show kpi_expiring = 1 (only the near-expiry quote).
+        """
+        from datetime import date, timedelta
+        qr1 = make_quote()
+        qr2 = make_quote()
+        Quote.objects.create(
+            quote_request=qr1, created_by=self.staff,
+            status='sent', valid_until=date.today() + timedelta(days=3),
+        )
+        Quote.objects.create(
+            quote_request=qr2, created_by=self.staff,
+            status='sent', valid_until=date.today() + timedelta(days=30),
+        )
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.context['kpi_expiring'], 1)
+
+    # ------------------------------------------------------------------
+    # 5. Delivered This Month counts current-month deliveries only
+    # ------------------------------------------------------------------
+
+    def test_kpi_delivered_counts_current_month_only(self):
+        """
+        GIVEN one order delivered this month and one whose update was created
+        in the previous month (via queryset update to bypass auto_now_add)
+        WHEN staff GETs the dashboard
+        SHOULD show kpi_delivered = 1.
+        """
+        from django.utils import timezone
+        qr1 = make_quote()
+        qr2 = make_quote()
+        OrderStatusUpdate.objects.create(
+            quote_request=qr1, status='delivered',
+            update_type='update', created_by=self.staff,
+        )
+        old_update = OrderStatusUpdate.objects.create(
+            quote_request=qr2, status='delivered',
+            update_type='update', created_by=self.staff,
+        )
+        last_month = timezone.now().replace(day=1) - timezone.timedelta(days=1)
+        OrderStatusUpdate.objects.filter(pk=old_update.pk).update(created_at=last_month)
+
+        response = self.client.get(STAFF_DASHBOARD_URL)
+        self.assertEqual(response.context['kpi_delivered'], 1)
